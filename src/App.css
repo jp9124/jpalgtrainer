@@ -111,6 +111,7 @@ h3 {
   min-height: 520px;
   padding: 34px;
 }
+.timer-panel { width: min(100%, 560px); margin-top: 0; padding: 22px 18px; color: #f7f7f2; background: #000; text-align: center; }.timer-panel time { display: block; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }.timer-panel p { max-width: 100%; margin: 26px auto 8px; font-family: "DM Mono", monospace; font-size: .93rem; line-height: 1.65; overflow-wrap: anywhere; }.timer-panel small { color: #cbc6be; }
 .cube-portrait {
   --cell: 50px;
   display: grid;

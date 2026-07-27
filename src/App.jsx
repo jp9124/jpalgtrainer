@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import algorithmSource from "../../algtrainer/js/alg_list.js?raw";
 import "./App.css";
 
 const COLORS = {
@@ -23,6 +24,7 @@ const TRAINING_SETS = {
   4: ["OLL Parity", "PLL Parity"],
   5: ["OLL Parity", "PLL Parity"],
 };
+const ALGORITHM_LIBRARY = new Function(`${algorithmSource}\nreturn { CLL, EG1, EG2 };`)();
 const BINDINGS = [
   ["i", "R"],
   ["k", "R'"],
@@ -178,6 +180,13 @@ function applyMove(state, raw) {
     );
   return fromStickers(stickers, n);
 }
+function algorithmMoves(algorithm) {
+  return (algorithm.match(/[URFDLBMESxyzurfdlb](?:2'?|')?/g) || []).map((move) => move.replace("2'", "2"));
+}
+function inverseMoves(moves) {
+  return [...moves].reverse().map((move) => move.endsWith("2") ? move : move.endsWith("'") ? move.slice(0, -1) : `${move}'`);
+}
+function isSolved(cube) { return Object.entries(cube).every(([face, grid]) => grid.every(row => row.every(color => color === face))); }
 
 function Cube({ cube }) {
   const n = cube.U.length;
@@ -251,10 +260,28 @@ function App() {
   const [cube, setCube] = useState(() => fresh(3));
   const [showKeyboardGuide, setShowKeyboardGuide] = useState(false);
   const [trainingSet, setTrainingSet] = useState("");
-  const execute = (move) => setCube((c) => applyMove(c, move));
+  const [caseData, setCaseData] = useState(null);
+  const [showSolution, setShowSolution] = useState(false);
+  const [timerStartedAt, setTimerStartedAt] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const execute = (move) => setCube((c) => { const next = applyMove(c, move); if (timerStartedAt && isSolved(next)) { setElapsed((Date.now() - timerStartedAt) / 1000); setTimerStartedAt(null); } return next; });
+  useEffect(() => { if (!timerStartedAt) return; const timer = window.setInterval(() => setElapsed((Date.now() - timerStartedAt) / 1000), 20); return () => window.clearInterval(timer); }, [timerStartedAt]);
+  const nextCase = () => {
+    const collection = ALGORITHM_LIBRARY[trainingSet];
+    if (!collection) return;
+    const caseName = Object.keys(collection)[Math.floor(Math.random() * Object.keys(collection).length)];
+    const alternatives = collection[caseName];
+    const algorithm = alternatives[Math.floor(Math.random() * alternatives.length)].split("/").map(a => a.trim()).filter(Boolean);
+    const chosen = algorithm[Math.floor(Math.random() * algorithm.length)] || "";
+    const moves = algorithmMoves(chosen);
+    setCube(inverseMoves(moves).reduce((state, move) => applyMove(state, move), fresh(size)));
+    setCaseData({ name: caseName, algorithm: chosen }); setShowSolution(false); setElapsed(0); setTimerStartedAt(Date.now());
+  };
   useEffect(() => {
     const keydown = (e) => {
       if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+      if (e.code === "Space" && caseData) { e.preventDefault(); setShowSolution(show => !show); return; }
+      if (e.code === "Enter" && trainingSet && ALGORITHM_LIBRARY[trainingSet]) { e.preventDefault(); nextCase(); return; }
       const prefix = e.shiftKey ? "shift+" : "";
       const found = BINDINGS.find(
         ([key]) => key === prefix + e.key.toLowerCase(),
@@ -266,11 +293,12 @@ function App() {
     };
     window.addEventListener("keydown", keydown);
     return () => window.removeEventListener("keydown", keydown);
-  }, []);
+  }, [caseData, trainingSet, timerStartedAt]);
   const changeSize = (n) => {
     setSize(n);
     setCube(fresh(n));
     setTrainingSet("");
+    setCaseData(null); setTimerStartedAt(null); setElapsed(0);
   };
   const scramble = () => {
     const faces = ["U", "R", "F", "D", "L", "B"];
@@ -312,7 +340,7 @@ function App() {
               if (value === "scramble") {
                 scramble();
                 setTrainingSet("");
-              } else setTrainingSet(value);
+              } else { setTrainingSet(value); setCaseData(null); setTimerStartedAt(null); setElapsed(0); }
             }}
           >
             <option value="">Choose training set…</option>
@@ -333,14 +361,13 @@ function App() {
       <section className="workspace">
         <div className="stage">
           <Cube cube={cube} />
+          <div className="timer-panel"><time>{elapsed.toFixed(2)}</time>{caseData && <><p>{showSolution ? caseData.algorithm : `Case ${caseData.name} ready`}</p><small>{showSolution ? "Space to hide solution" : "Space to show solution"}</small></>} {!caseData && trainingSet && ALGORITHM_LIBRARY[trainingSet] && <small>Press Enter for a case</small>}</div>
         </div>
         <aside>
           <p className="label">Training mode</p>
           <h3>{trainingSet || "Free practice"}</h3>
           <p className="hint">
-            {trainingSet
-              ? `Selected: ${trainingSet}. Algorithm cases will be added here next.`
-              : "Choose Scramble or an algorithm subset from the top bar."}
+            {trainingSet ? ALGORITHM_LIBRARY[trainingSet] ? "Press Enter for a timed case. Press Space to reveal its solution." : "This subset is ready for a future case library." : "Choose Scramble or an algorithm subset from the top bar."}
           </p>
         </aside>
       </section>
