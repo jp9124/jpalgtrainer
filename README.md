@@ -1,5 +1,7 @@
 # WCA Alg Trainer (React)
 
+## Link: https://jpalgtrainer.netlify.app/ 
+
 A React algorithm trainer for twisty puzzles, modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Started with FTO
 (Face-Turning Octahedron); now also covers Megaminx, Pyraminx, Skewb, and
