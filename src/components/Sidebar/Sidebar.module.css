@@ -1,0 +1,145 @@
+.sidebar {
+  width: 300px;
+  flex: 0 0 300px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.sidebar section {
+  margin-bottom: 22px;
+}
+
+/* Every section except Cases keeps its natural size no matter how cramped
+   the sidebar gets — all the squeeze lands on .caseSection instead, which
+   is the one section built to shrink and scroll internally. */
+.sidebar section:not(.caseSection) {
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+/* The Cases section is the one part of the sidebar whose content length is
+   unbounded (algorithm sets can have dozens of cases/groups), so it's the
+   one that flexes to fill available room and scrolls on its own — the rest
+   of the sidebar (set picker, options, stats, custom set) stays put. */
+.caseSection {
+  flex: 1 1 auto;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+}
+
+.caseList {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.groupHeader:hover {
+  background: var(--panel-2);
+}
+
+.groupHeader input {
+  margin-top: 2px;
+  flex: none;
+}
+
+.groupName {
+  flex: 1;
+}
+
+.caseRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: default;
+}
+
+.caseRow:hover {
+  background: var(--panel-2);
+}
+
+.name {
+  flex: 1;
+  cursor: pointer;
+}
+
+.best {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.rowActions button {
+  flex: 1;
+}
+
+.small {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.small:hover {
+  border-color: var(--accent);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+  gap: 8px;
+}
+
+.toggleRow input {
+  transform: scale(1.1);
+  flex: none;
+}
+
+.sourceTag {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.customTextarea {
+  min-height: 220px;
+}
+

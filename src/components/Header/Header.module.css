@@ -1,0 +1,47 @@
+.header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.puzzleSelect {
+  width: auto;
+  min-width: 160px;
+  font-weight: 600;
+}
+
+.themeToggle {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.themeToggle:hover {
+  border-color: var(--accent);
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.title small {
+  color: var(--text-dim);
+  font-size: 12px;
+}

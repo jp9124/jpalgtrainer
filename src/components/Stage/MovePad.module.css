@@ -1,0 +1,39 @@
+.movepad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.movepad button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 7px 10px;
+  min-width: 44px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.movepad button:hover {
+  border-color: var(--accent);
+}
+
+.moveLabel {
+  font-weight: 600;
+}
+
+.key {
+  display: block;
+  font-size: 9px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+}

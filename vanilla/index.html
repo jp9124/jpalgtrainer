@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FTO Alg Trainer</title>
+<style>
+  :root {
+    --bg: #14161c;
+    --panel: #1c1f28;
+    --panel-2: #242833;
+    --border: #333846;
+    --text: #e7e9ee;
+    --text-dim: #9aa0af;
+    --accent: #5b8cff;
+    --good: #3ecf8e;
+    --bad: #ff5b6a;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  h1, h2, h3 { margin: 0 0 8px 0; }
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
+  }
+  header .title { display: flex; align-items: baseline; gap: 10px; }
+  header .title small { color: var(--text-dim); font-size: 12px; }
+  .mode-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .mode-toggle button {
+    background: var(--panel); color: var(--text-dim); border: none; padding: 8px 16px;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  .mode-toggle button.active { background: var(--accent); color: #fff; }
+
+  .layout { flex: 1; display: flex; gap: 0; min-height: 0; }
+  .sidebar {
+    width: 300px; flex: 0 0 300px; border-right: 1px solid var(--border);
+    padding: 16px; overflow-y: auto; background: var(--panel);
+  }
+  .sidebar section { margin-bottom: 22px; }
+  .sidebar h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+  select, textarea, input[type="text"] {
+    width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px; font-size: 13px; font-family: inherit;
+  }
+  textarea { font-family: var(--mono); min-height: 90px; resize: vertical; }
+  .case-list { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+  .case-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px;
+    font-size: 13px; cursor: pointer;
+  }
+  .case-row:hover { background: var(--panel-2); }
+  .case-row .name { flex: 1; }
+  .case-row .best { color: var(--text-dim); font-size: 11px; font-family: var(--mono); }
+  .row-actions { display: flex; gap: 8px; margin: 6px 0; }
+  .row-actions button { flex: 1; }
+  button.small {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
+  button.small:hover { border-color: var(--accent); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .toggle-row input { transform: scale(1.1); }
+  .source-tag { color: var(--text-dim); font-size: 11px; margin-top: 2px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; }
+  .stats-grid div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+  .stats-grid .num { font-family: var(--mono); font-size: 18px; display: block; margin-top: 2px; }
+
+  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 10px; overflow-y: auto; }
+  .case-info { text-align: center; min-height: 20px; font-size: 14px; color: var(--text-dim); }
+  .case-info strong { color: var(--text); }
+  twisty-player { width: min(46vh, 460px); height: min(46vh, 460px); background: var(--panel); border-radius: 12px; border: 1px solid var(--border); }
+  .timer { font-family: var(--mono); font-size: 42px; font-weight: 700; letter-spacing: 0.02em; }
+  .timer.running { color: var(--accent); }
+  .timer.solved { color: var(--good); }
+  .alg-display {
+    font-family: var(--mono); font-size: 16px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; min-width: 260px; text-align: center; letter-spacing: 0.02em;
+  }
+  .alg-display.hidden-text { color: transparent; text-shadow: 0 0 9px rgba(231,233,238,0.6); user-select: none; }
+  .status-line { font-size: 13px; color: var(--text-dim); min-height: 18px; }
+  .status-line.good { color: var(--good); }
+
+  .controls-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .controls-row button {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+  }
+  .controls-row button:hover { border-color: var(--accent); }
+  .controls-row button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .movepad { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 4px; }
+  .movepad .pair { display: flex; flex-direction: column; gap: 4px; }
+  .movepad button {
+    font-family: var(--mono); font-size: 13px; padding: 7px 0; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text); cursor: pointer;
+  }
+  .movepad button:hover { border-color: var(--accent); }
+  .movepad .key {
+    display: block; font-size: 9px; color: var(--text-dim); margin-top: 1px; font-family: var(--mono);
+  }
+
+  .legend { font-size: 11px; color: var(--text-dim); text-align: center; max-width: 520px; }
+  footer { text-align: center; padding: 10px; font-size: 11px; color: var(--text-dim); border-top: 1px solid var(--border); }
+  a { color: var(--accent); }
+  .loading-banner {
+    background: #3a2f10; color: #ffd479; border: 1px solid #6b551b; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; margin: 10px 20px;
+  }
+  .loading-banner.error { background: #3a1414; color: #ff9d9d; border-color: #6b1b1b; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">
+      <h1>FTO Alg Trainer</h1>
+      <small>Face-Turning Octahedron &middot; algorithm drilling prototype</small>
+    </div>
+    <div class="mode-toggle">
+      <button id="modeLearnBtn" class="active">Learn</button>
+      <button id="modePracticeBtn">Practice</button>
+    </div>
+  </header>
+
+  <div id="loadingBanner" class="loading-banner">Loading FTO puzzle engine from cubing.js&hellip;</div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section>
+        <h2>Algorithm Set</h2>
+        <select id="setSelect"></select>
+        <div id="setSource" class="source-tag"></div>
+      </section>
+
+      <section>
+        <h2>Cases</h2>
+        <div class="row-actions">
+          <button class="small" id="selectAllBtn">All</button>
+          <button class="small" id="selectNoneBtn">None</button>
+        </div>
+        <div class="case-list" id="caseList"></div>
+      </section>
+
+      <section id="practiceOptions">
+        <h2>Practice Options</h2>
+        <div class="toggle-row">
+          <label for="aufToggle">Random pre-move (no reverse-peeking)</label>
+          <input type="checkbox" id="aufToggle" checked />
+        </div>
+        <div class="toggle-row">
+          <label for="autoNextToggle">Auto-advance on solve</label>
+          <input type="checkbox" id="autoNextToggle" checked />
+        </div>
+      </section>
+
+      <section>
+        <h2>Session Stats</h2>
+        <div class="stats-grid">
+          <div>Attempts <span class="num" id="statAttempts">0</span></div>
+          <div>Solved <span class="num" id="statSolved">0</span></div>
+          <div>Best <span class="num" id="statBest">&ndash;</span></div>
+          <div>Avg <span class="num" id="statAvg">&ndash;</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Custom Set</h2>
+        <textarea id="customTextarea" placeholder="One per line:&#10;My Alg: R U R' F'&#10;Another: F' U F' D' F U' F' D F'"></textarea>
+        <div class="row-actions">
+          <button class="small" id="saveCustomBtn">Save custom set</button>
+        </div>
+        <div id="customStatus" class="source-tag"></div>
+      </section>
+    </aside>
+
+    <main class="stage">
+      <twisty-player id="player" puzzle="fto" background="none" control-panel="none" hint-facelets="none"></twisty-player>
+
+      <div class="case-info" id="caseInfo">Pick a case from the list to view it.</div>
+
+      <div id="learnControls" class="controls-row">
+        <button id="playAlgBtn">&#9654; Play algorithm</button>
+        <button id="jumpStartBtn">&#8676; Start</button>
+        <button id="jumpEndBtn">End &#8677;</button>
+      </div>
+
+      <div id="practiceArea" class="hidden" style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
+        <div class="timer" id="timer">0.00</div>
+        <div class="status-line" id="statusLine">Press any move key to start the timer.</div>
+        <div class="alg-display hidden-text" id="algDisplay">? ? ? ? ?</div>
+        <div class="controls-row">
+          <button class="primary" id="nextCaseBtn">New case</button>
+          <button id="revealBtn">Reveal (space)</button>
+          <button id="undoBtn">Undo move</button>
+          <button id="resetCaseBtn">Reset case</button>
+        </div>
+        <div class="movepad" id="movepad"></div>
+        <div class="legend">Keyboard layout matches the official cubing.js / Twizzle FTO controls (I/K=R, W/O=B, S/L=D, D/E=L, J/F=U, H/G=F, Q/Z=BL, P/.=BR). Space reveals the algorithm.</div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    Uses <a href="https://github.com/cubing/cubing.js" target="_blank" rel="noopener">cubing.js</a> for FTO puzzle rendering &amp; move logic. Built-in algorithms sourced from public FTO solving guides &mdash; add your own via the Custom Set box.
+  </footer>
+</div>
+
+<script type="module">
+import { TwistyPlayer } from "https://cdn.cubing.net/v0/js/cubing/twisty";
+import { puzzles } from "https://cdn.cubing.net/v0/js/cubing/puzzles";
+import { Alg } from "https://cdn.cubing.net/v0/js/cubing/alg";
+
+// ---------------------------------------------------------------------------
+// Built-in algorithm sets (verified against public FTO solving references)
+// ---------------------------------------------------------------------------
+const BUILTIN_SETS = [
+  {
+    id: "beginner-basics",
+    name: "Beginner Basics",
+    source: "Cubelelo “Beginner’s Guide to Solving the FTO”",
+    cases: [
+      { name: "Sledgehammer", alg: "R' F R F'" },
+      { name: "Hedgeslammer", alg: "F R' F' R" },
+    ],
+  },
+  {
+    id: "l3t-flip-cycle",
+    name: "L3T — Flip & Cycle",
+    source: "FTO Notes (Gottlieb-style notation)",
+    cases: [
+      { name: "Hedge (CCW cycle + flip)", alg: "R B' R' B" },
+      { name: "Sledge (CW cycle + flip)", alg: "R' L R L'" },
+    ],
+  },
+  {
+    id: "l3t-corners",
+    name: "L3T — Corner 3-Cycle",
+    source: "FTO Notes (Gottlieb-style notation)",
+    cases: [
+      { name: "Corners, clockwise", alg: "F' U F' D' F U' F' D F'" },
+      { name: "Corners, counter-clockwise", alg: "F D' F U F' D F U' F" },
+    ],
+  },
+];
+
+const CUSTOM_SET_ID = "custom";
+const STORAGE_KEY = "fto-trainer-v1";
+
+// Official cubing.js / Twizzle FTO keyboard layout (see ftoKeyMapping.ts)
+const KEY_TO_MOVE = {
+  KeyI: "R", KeyK: "R'",
+  KeyW: "B", KeyO: "B'",
+  KeyS: "D", KeyL: "D'",
+  KeyD: "L", KeyE: "L'",
+  KeyJ: "U", KeyF: "U'",
+  KeyH: "F", KeyG: "F'",
+  KeyQ: "BL", KeyZ: "BL'",
+  KeyP: "BR'", Period: "BR",
+};
+
+const FACE_BUTTONS = [
+  { face: "U", cwKey: "J", ccwKey: "F" },
+  { face: "F", cwKey: "H", ccwKey: "G" },
+  { face: "R", cwKey: "I", ccwKey: "K" },
+  { face: "L", cwKey: "D", ccwKey: "E" },
+  { face: "D", cwKey: "S", ccwKey: "L" },
+  { face: "B", cwKey: "W", ccwKey: "O" },
+  { face: "BL", cwKey: "Q", ccwKey: "Z" },
+  { face: "BR", cwKey: ".", ccwKey: "P" },
+];
+
+// ---------------------------------------------------------------------------
+// Persistent storage helpers
+// ---------------------------------------------------------------------------
+function loadStorage() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveStorage(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+const storage = loadStorage();
+storage.stats ??= {};       // caseKey -> { best, times: [] }
+storage.customSetText ??= "";
+storage.checkedCases ??= {}; // setId -> [case names]
+
+// ---------------------------------------------------------------------------
+// App state
+// ---------------------------------------------------------------------------
+let kpuzzle = null;
+let solvedPattern = null;
+let allSets = [...BUILTIN_SETS];
+let customSet = { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases: [] };
+
+let mode = "learn"; // "learn" | "practice"
+let activeSet = allSets[0];
+let checkedCaseNames = new Set();
+
+let currentCase = null;
+let scrambleAlgString = "";
+let scrambledPattern = null;
+let solveMoves = [];
+let timerRunning = false;
+let timerStart = 0;
+let timerInterval = null;
+let revealed = false;
+let lastCaseName = null;
+
+const player = document.getElementById("player");
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+const loadingBanner = document.getElementById("loadingBanner");
+
+(async function init() {
+  try {
+    kpuzzle = await puzzles.fto.kpuzzle();
+    solvedPattern = kpuzzle.defaultPattern();
+    loadingBanner.remove();
+  } catch (err) {
+    loadingBanner.textContent =
+      "Failed to load the FTO puzzle engine from cdn.cubing.net (" + err + "). Check your network connection and reload.";
+    loadingBanner.classList.add("error");
+    return;
+  }
+
+  if (storage.customSetText) {
+    document.getElementById("customTextarea").value = storage.customSetText;
+    applyCustomSetText(storage.customSetText, { silent: true });
+  }
+
+  buildSetSelect();
+  buildMovepad();
+  selectSet(allSets[0].id);
+  setMode("learn");
+
+  document.getElementById("modeLearnBtn").addEventListener("click", () => setMode("learn"));
+  document.getElementById("modePracticeBtn").addEventListener("click", () => setMode("practice"));
+  document.getElementById("setSelect").addEventListener("change", (e) => selectSet(e.target.value));
+  document.getElementById("selectAllBtn").addEventListener("click", () => setAllChecked(true));
+  document.getElementById("selectNoneBtn").addEventListener("click", () => setAllChecked(false));
+  document.getElementById("playAlgBtn").addEventListener("click", playCurrentAlgLearn);
+  document.getElementById("jumpStartBtn").addEventListener("click", () => player.jumpToStart());
+  document.getElementById("jumpEndBtn").addEventListener("click", () => player.jumpToEnd());
+  document.getElementById("nextCaseBtn").addEventListener("click", () => loadNewPracticeCase());
+  document.getElementById("revealBtn").addEventListener("click", revealAlg);
+  document.getElementById("undoBtn").addEventListener("click", undoMove);
+  document.getElementById("resetCaseBtn").addEventListener("click", () => loadPracticeCase(currentCase));
+  document.getElementById("saveCustomBtn").addEventListener("click", () => {
+    const text = document.getElementById("customTextarea").value;
+    storage.customSetText = text;
+    saveStorage(storage);
+    applyCustomSetText(text, { silent: false });
+  });
+
+  document.addEventListener("keydown", onKeyDown);
+})();
+
+// ---------------------------------------------------------------------------
+// Set / case management
+// ---------------------------------------------------------------------------
+function buildSetSelect() {
+  const sel = document.getElementById("setSelect");
+  sel.innerHTML = "";
+  for (const set of allSets) {
+    const opt = document.createElement("option");
+    opt.value = set.id;
+    opt.textContent = set.name + " (" + set.cases.length + ")";
+    sel.appendChild(opt);
+  }
+}
+
+function selectSet(setId) {
+  activeSet = allSets.find((s) => s.id === setId) || allSets[0];
+  document.getElementById("setSelect").value = activeSet.id;
+  document.getElementById("setSource").textContent = "Source: " + activeSet.source;
+
+  const remembered = storage.checkedCases[activeSet.id];
+  checkedCaseNames = new Set(
+    remembered && remembered.length ? remembered : activeSet.cases.map((c) => c.name)
+  );
+
+  buildCaseList();
+  if (activeSet.cases.length) {
+    if (mode === "learn") showLearnCase(activeSet.cases[0]);
+    else loadNewPracticeCase();
+  } else {
+    document.getElementById("caseInfo").textContent = "This set has no cases yet.";
+  }
+}
+
+function caseStatsKey(set, c) {
+  return set.id + "::" + c.name;
+}
+
+function buildCaseList() {
+  const list = document.getElementById("caseList");
+  list.innerHTML = "";
+  for (const c of activeSet.cases) {
+    const row = document.createElement("div");
+    row.className = "case-row";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = checkedCaseNames.has(c.name);
+    cb.addEventListener("change", () => {
+      if (cb.checked) checkedCaseNames.add(c.name);
+      else checkedCaseNames.delete(c.name);
+      persistCheckedCases();
+    });
+
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = c.name;
+    name.title = "Click to view in Learn mode";
+    name.addEventListener("click", () => {
+      setMode("learn");
+      showLearnCase(c);
+    });
+
+    const best = document.createElement("span");
+    best.className = "best";
+    const stat = storage.stats[caseStatsKey(activeSet, c)];
+    best.textContent = stat && stat.best ? stat.best.toFixed(2) + "s" : "";
+
+    row.appendChild(cb);
+    row.appendChild(name);
+    row.appendChild(best);
+    list.appendChild(row);
+  }
+}
+
+function persistCheckedCases() {
+  storage.checkedCases[activeSet.id] = [...checkedCaseNames];
+  saveStorage(storage);
+}
+
+function setAllChecked(value) {
+  checkedCaseNames = new Set(value ? activeSet.cases.map((c) => c.name) : []);
+  persistCheckedCases();
+  buildCaseList();
+}
+
+function applyCustomSetText(text, { silent }) {
+  const statusEl = document.getElementById("customStatus");
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const cases = [];
+  const errors = [];
+
+  for (const line of lines) {
+    const idx = line.indexOf(":");
+    if (idx === -1) {
+      errors.push('Missing ":" in "' + line + '"');
+      continue;
+    }
+    const name = line.slice(0, idx).trim();
+    const algStr = line.slice(idx + 1).trim();
+    if (!name || !algStr) {
+      errors.push('Empty name or alg in "' + line + '"');
+      continue;
+    }
+    try {
+      if (kpuzzle) kpuzzle.defaultPattern().applyAlg(algStr); // validates move families
+      cases.push({ name, alg: algStr });
+    } catch (err) {
+      errors.push('"' + name + '": ' + err.message);
+    }
+  }
+
+  customSet = { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases };
+  allSets = [...BUILTIN_SETS, customSet];
+  buildSetSelect();
+
+  if (!silent) {
+    statusEl.textContent = errors.length
+      ? "Saved " + cases.length + " case(s). Errors: " + errors.join("; ")
+      : "Saved " + cases.length + " case(s).";
+  }
+
+  if (activeSet.id === CUSTOM_SET_ID) selectSet(CUSTOM_SET_ID);
+  else document.getElementById("setSelect").value = activeSet.id;
+}
+
+// ---------------------------------------------------------------------------
+// Mode switching
+// ---------------------------------------------------------------------------
+function setMode(newMode) {
+  mode = newMode;
+  document.getElementById("modeLearnBtn").classList.toggle("active", mode === "learn");
+  document.getElementById("modePracticeBtn").classList.toggle("active", mode === "practice");
+  document.getElementById("learnControls").classList.toggle("hidden", mode !== "learn");
+  document.getElementById("practiceArea").classList.toggle("hidden", mode !== "practice");
+  document.getElementById("practiceOptions").classList.toggle("hidden", mode !== "practice");
+  player.controlPanel = mode === "learn" ? "bottom-row" : "none";
+
+  stopTimer();
+  if (mode === "learn" && activeSet.cases.length) {
+    showLearnCase(activeSet.cases[0]);
+  } else if (mode === "practice") {
+    loadNewPracticeCase();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Learn mode
+// ---------------------------------------------------------------------------
+function showLearnCase(c) {
+  player.alg = c.alg;
+  player.experimentalSetupAlg = "";
+  player.jumpToStart();
+  document.getElementById("caseInfo").innerHTML =
+    "<strong>" + c.name + "</strong> &mdash; <span style=\"font-family:monospace\">" + c.alg + "</span>";
+}
+
+function playCurrentAlgLearn() {
+  player.jumpToStart();
+  player.play();
+}
+
+// ---------------------------------------------------------------------------
+// Practice mode
+// ---------------------------------------------------------------------------
+function buildMovepad() {
+  const pad = document.getElementById("movepad");
+  pad.innerHTML = "";
+  for (const { face, cwKey, ccwKey } of FACE_BUTTONS) {
+    const col = document.createElement("div");
+    col.className = "pair";
+
+    const cw = document.createElement("button");
+    cw.textContent = face;
+    cw.title = "Key: " + cwKey;
+    cw.addEventListener("click", () => applyMove(face));
+
+    const ccw = document.createElement("button");
+    ccw.textContent = face + "'";
+    ccw.title = "Key: " + ccwKey;
+    ccw.addEventListener("click", () => applyMove(face + "'"));
+
+    const label = document.createElement("span");
+    label.className = "key";
+    label.textContent = cwKey + " / " + ccwKey;
+
+    col.appendChild(cw);
+    col.appendChild(ccw);
+    col.appendChild(label);
+    pad.appendChild(col);
+  }
+}
+
+function pickRandomCase() {
+  const pool = activeSet.cases.filter((c) => checkedCaseNames.has(c.name));
+  if (!pool.length) return null;
+  if (pool.length === 1) return pool[0];
+  let choice;
+  do {
+    choice = pool[Math.floor(Math.random() * pool.length)];
+  } while (choice.name === lastCaseName);
+  return choice;
+}
+
+function loadNewPracticeCase() {
+  const c = pickRandomCase();
+  if (!c) {
+    document.getElementById("caseInfo").textContent = "No cases selected — check at least one case in the sidebar.";
+    return;
+  }
+  lastCaseName = c.name;
+  loadPracticeCase(c);
+}
+
+function loadPracticeCase(c) {
+  currentCase = c;
+  revealed = false;
+  solveMoves = [];
+  stopTimer();
+
+  const randomAuf = document.getElementById("aufToggle").checked;
+  let setupAlg;
+  try {
+    setupAlg = new Alg(c.alg).invert().toString();
+  } catch {
+    setupAlg = "";
+  }
+  if (randomAuf) {
+    const options = ["", "U", "U'"];
+    const pick = options[Math.floor(Math.random() * options.length)];
+    if (pick) setupAlg = (setupAlg + " " + pick).trim();
+  }
+  scrambleAlgString = setupAlg;
+  scrambledPattern = solvedPattern.applyAlg(scrambleAlgString);
+
+  syncPlayer();
+  document.getElementById("caseInfo").innerHTML = "Case hidden — solve it, then press <strong>space</strong> to reveal.";
+  document.getElementById("algDisplay").textContent = c.alg;
+  document.getElementById("algDisplay").classList.add("hidden-text");
+  document.getElementById("timer").textContent = "0.00";
+  document.getElementById("timer").className = "timer";
+  document.getElementById("statusLine").textContent = "Press any move key to start the timer.";
+  document.getElementById("statusLine").className = "status-line";
+}
+
+function syncPlayer() {
+  const full = solveMoves.length ? scrambleAlgString + " " + solveMoves.join(" ") : scrambleAlgString;
+  player.alg = full;
+  player.jumpToEnd();
+}
+
+function currentPattern() {
+  return solveMoves.length ? scrambledPattern.applyAlg(solveMoves.join(" ")) : scrambledPattern;
+}
+
+function applyMove(move) {
+  if (mode !== "practice" || !currentCase) return;
+  if (!timerRunning) startTimer();
+
+  try {
+    scrambledPattern.applyMove(move); // throws if move invalid for this puzzle
+  } catch (err) {
+    document.getElementById("statusLine").textContent = "Invalid move: " + move;
+    return;
+  }
+
+  solveMoves.push(move);
+  syncPlayer();
+
+  if (currentPattern().isIdentical(solvedPattern)) {
+    onSolved();
+  }
+}
+
+function undoMove() {
+  if (!solveMoves.length) return;
+  solveMoves.pop();
+  syncPlayer();
+}
+
+function startTimer() {
+  timerRunning = true;
+  timerStart = performance.now();
+  document.getElementById("timer").className = "timer running";
+  document.getElementById("statusLine").textContent = "Solving…";
+  timerInterval = setInterval(() => {
+    const t = (performance.now() - timerStart) / 1000;
+    document.getElementById("timer").textContent = t.toFixed(2);
+  }, 30);
+}
+
+function stopTimer() {
+  timerRunning = false;
+  clearInterval(timerInterval);
+}
+
+function onSolved() {
+  const elapsed = (performance.now() - timerStart) / 1000;
+  stopTimer();
+  document.getElementById("timer").textContent = elapsed.toFixed(2);
+  document.getElementById("timer").className = "timer solved";
+  document.getElementById("statusLine").textContent = "Solved!";
+  document.getElementById("statusLine").className = "status-line good";
+  document.getElementById("algDisplay").classList.remove("hidden-text");
+  document.getElementById("caseInfo").innerHTML =
+    "<strong>" + currentCase.name + "</strong> solved in " + elapsed.toFixed(2) + "s";
+
+  recordResult(currentCase, elapsed);
+
+  if (document.getElementById("autoNextToggle").checked) {
+    setTimeout(loadNewPracticeCase, 1100);
+  }
+}
+
+function recordResult(c, elapsed) {
+  const key = caseStatsKey(activeSet, c);
+  const entry = (storage.stats[key] ??= { best: null, times: [] });
+  entry.times.push(elapsed);
+  if (entry.best === null || elapsed < entry.best) entry.best = elapsed;
+  saveStorage(storage);
+  buildCaseList();
+  updateSessionStats(elapsed);
+}
+
+let sessionAttempts = 0;
+let sessionSolved = 0;
+let sessionBest = null;
+let sessionTimes = [];
+function updateSessionStats(elapsed) {
+  sessionAttempts++;
+  sessionSolved++;
+  sessionTimes.push(elapsed);
+  if (sessionBest === null || elapsed < sessionBest) sessionBest = elapsed;
+  const avg = sessionTimes.reduce((a, b) => a + b, 0) / sessionTimes.length;
+  document.getElementById("statAttempts").textContent = sessionAttempts;
+  document.getElementById("statSolved").textContent = sessionSolved;
+  document.getElementById("statBest").textContent = sessionBest.toFixed(2);
+  document.getElementById("statAvg").textContent = avg.toFixed(2);
+}
+
+function revealAlg() {
+  if (mode !== "practice" || !currentCase) return;
+  revealed = true;
+  document.getElementById("algDisplay").classList.remove("hidden-text");
+  document.getElementById("caseInfo").innerHTML = "<strong>" + currentCase.name + "</strong> (revealed)";
+}
+
+// ---------------------------------------------------------------------------
+// Keyboard input
+// ---------------------------------------------------------------------------
+function onKeyDown(e) {
+  const tag = document.activeElement?.tagName;
+  if (tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT") return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    revealAlg();
+    return;
+  }
+
+  if (mode !== "practice") return;
+  const move = KEY_TO_MOVE[e.code];
+  if (move) {
+    e.preventDefault();
+    applyMove(move);
+  }
+}
+</script>
+</body>
+</html>

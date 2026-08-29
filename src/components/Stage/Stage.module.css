@@ -1,0 +1,221 @@
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+}
+
+/* ---- Practice column (front and center) ---- */
+
+.practiceColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.practiceTwisty {
+  width: min(52vh, 480px);
+  height: min(52vh, 480px);
+  background: var(--panel);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.caseInfo {
+  text-align: center;
+  min-height: 20px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.caseInfo strong {
+  color: var(--text);
+}
+
+.controlsRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.controlsRow button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.controlsRow button:hover {
+  border-color: var(--accent);
+}
+
+.primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff;
+}
+
+.practiceArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.timer {
+  font-family: var(--mono);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.timerRunning {
+  color: var(--accent);
+}
+
+.timerSolved {
+  color: var(--good);
+}
+
+.algDisplay {
+  font-family: var(--mono);
+  font-size: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-width: 260px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.hiddenText {
+  color: transparent;
+  text-shadow: 0 0 9px var(--reveal-blur);
+  user-select: none;
+}
+
+.statusLine {
+  font-size: 13px;
+  color: var(--text-dim);
+  min-height: 18px;
+}
+
+.statusGood {
+  color: var(--good);
+}
+
+.legend {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  max-width: 560px;
+}
+
+/* ---- Learn / reference column (right side) ---- */
+
+.learnColumn {
+  width: 300px;
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  gap: 10px;
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+}
+
+.learnHeading {
+  align-self: flex-start;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.learnTwisty {
+  width: min(26vh, 220px);
+  height: min(26vh, 220px);
+  background: var(--panel-2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.statsSection {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.statsGrid div {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.num {
+  font-family: var(--mono);
+  font-size: 18px;
+  display: block;
+  margin-top: 2px;
+}
+
+.learnCaseInfo {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+  min-height: 36px;
+}
+
+.learnCaseInfo strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.algMono {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.learnControlsRow {
+  display: flex;
+  gap: 6px;
+}
+
+.learnControlsRow button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.learnControlsRow button:hover {
+  border-color: var(--accent);
+}
