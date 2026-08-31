@@ -43,7 +43,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [revealed, setRevealed] = useState(false);
   const [lastSolveElapsed, setLastSolveElapsed] = useState(null);
 
-  const [statusLine, setStatusLine] = useState("Press any move key to start the timer.");
+  const [statusLine, setStatusLine] = useState("Free play — check a case in the sidebar to practice a timed case.");
   const [statusGood, setStatusGood] = useState(false);
   const [timerLabel, setTimerLabel] = useState("0.00");
   const [timerStatus, setTimerStatus] = useState("idle"); // idle | running | solved
@@ -70,10 +70,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   const checkedCaseNames = useMemo(() => {
     const remembered = persistedChecked[activeSet.id];
-    // An explicit empty array (everything unchecked via "None") is a real,
-    // intentional state — only fall back to "everything checked" when this
-    // set has never been touched at all (undefined).
-    return new Set(remembered !== undefined ? remembered : activeSet.cases.map((c) => c.name));
+    // Cases start unchecked by default (an untouched set has nothing
+    // selected) — an explicit "All" click is what turns them on.
+    return new Set(remembered !== undefined ? remembered : []);
   }, [persistedChecked, activeSet]);
 
   // Persist stats / checked-case selections / custom set draft.
@@ -181,6 +180,24 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     return moves.length ? base.applyAlg(moves.join(" ")) : base;
   }, []);
 
+  // A whole-puzzle rotation (x/y/z) leaves every face visually solved but
+  // isn't the literal identity pattern, so a plain isIdentical() call would
+  // wrongly call that "not solved". cubing.js has a real, tested check for
+  // this (KPattern.experimentalIsSolved({ ignorePuzzleOrientation: true })),
+  // but it only works for plain NxNxN cubes (2x2x2/3x3x3/5x5x5) — verified
+  // it throws "not supported" for FTO/Megaminx/Pyraminx/Skewb/Square-1, none
+  // of which expose the rotation moves needed to build an equivalent
+  // ourselves, so those puzzles keep the exact-orientation check.
+  const isSolved = useCallback(
+    (pattern) => {
+      if (typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
+        return pattern.experimentalIsSolved({ ignorePuzzleOrientation: true, ignoreCenterOrientation: false });
+      }
+      return pattern.isIdentical(solvedPattern);
+    },
+    [kpuzzle, solvedPattern],
+  );
+
   const pickNextCase = useCallback(() => {
     const pool = activeSet.cases.filter((c) => checkedCaseNames.has(c.name));
     if (!pool.length) return null;
@@ -227,15 +244,38 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     [kpuzzle, solvedPattern, stopTimer, syncPracticePlayer],
   );
 
+  // With no cases checked, there's nothing to scramble to or time — instead
+  // of leaving the practice puzzle showing whatever it last happened to
+  // display, put it in solved state and let moves still be turned freely
+  // (see applyMove/resetCase), just without any timer or solved-detection.
+  const loadFreePlay = useCallback(() => {
+    if (!solvedPattern) return;
+    setCurrentCase(null);
+    setRevealed(false);
+    setLastSolveElapsed(null);
+    solveMovesRef.current = [];
+    stopTimer();
+
+    scrambleAlgRef.current = "";
+    scrambledPatternRef.current = solvedPattern;
+
+    setTimerLabel("0.00");
+    setTimerStatus("idle");
+    setStatusLine("Free play — check a case in the sidebar to practice a timed case.");
+    setStatusGood(false);
+
+    syncPracticePlayer();
+  }, [solvedPattern, stopTimer, syncPracticePlayer]);
+
   const loadNewPracticeCase = useCallback(() => {
     const c = pickNextCase();
     if (!c) {
-      setCurrentCase(null);
+      loadFreePlay();
       return;
     }
     lastCaseNameRef.current = c.name;
     loadPracticeCase(c);
-  }, [pickNextCase, loadPracticeCase]);
+  }, [pickNextCase, loadPracticeCase, loadFreePlay]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -277,8 +317,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   const applyMove = useCallback(
     (move) => {
-      if (!currentCase || !kpuzzle) return;
-      if (timerStatus !== "running") startTimer();
+      // No active case (free play) still turns the puzzle — it's the timer
+      // and solved-detection below that require a real case to time against.
+      if (!scrambledPatternRef.current || !kpuzzle) return;
+      if (currentCase && timerStatus !== "running") startTimer();
 
       try {
         // applyAlg (not applyMove) so compound tokens like Square-1's
@@ -292,7 +334,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       solveMovesRef.current = [...solveMovesRef.current, move];
       animateMoveOnPracticePlayer(move);
 
-      if (currentPattern().isIdentical(solvedPattern)) {
+      if (currentCase && isSolved(currentPattern())) {
         onSolved();
       }
     },
@@ -300,6 +342,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       currentCase,
       kpuzzle,
       timerStatus,
+      isSolved,
       startTimer,
       animateMoveOnPracticePlayer,
       currentPattern,
@@ -316,7 +359,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   const resetCase = useCallback(() => {
     if (currentCase) loadPracticeCase(currentCase);
-  }, [currentCase, loadPracticeCase]);
+    else loadFreePlay();
+  }, [currentCase, loadPracticeCase, loadFreePlay]);
 
   // Reference-panel scrambling uses the same plain "set .alg, then
   // jumpToEnd()" technique as the Practice panel (see syncPracticePlayer)

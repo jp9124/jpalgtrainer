@@ -27,6 +27,22 @@ export function savePracticePrefs(data) {
   localStorage.setItem(PRACTICE_PREFS_KEY, JSON.stringify(data));
 }
 
+// Which puzzle was last active, so a page refresh stays put instead of
+// jumping back to the first puzzle in the list.
+const SELECTED_PUZZLE_KEY = `${STORAGE_PREFIX}:selected-puzzle`;
+
+export function loadSelectedPuzzleId() {
+  try {
+    return localStorage.getItem(SELECTED_PUZZLE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveSelectedPuzzleId(puzzleId) {
+  localStorage.setItem(SELECTED_PUZZLE_KEY, puzzleId);
+}
+
 export function loadStorage(puzzleId) {
   try {
     const parsed = JSON.parse(localStorage.getItem(keyFor(puzzleId)));

@@ -9,7 +9,9 @@ export default function PracticeCaseInfo() {
   }
   if (!currentCase) {
     return (
-      <div className={styles.caseInfo}>No cases selected &mdash; check at least one case in the sidebar.</div>
+      <div className={styles.caseInfo}>
+        Free play &mdash; check a case in the sidebar to practice a timed case.
+      </div>
     );
   }
   if (timerStatus === "solved" && lastSolveElapsed != null) {
