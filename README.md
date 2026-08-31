@@ -111,11 +111,13 @@ collection of named algorithms actually verified against a public source, not an
 - **Pyraminx** — the Speedsolving Wiki's Pyraminx algorithms page (ELL and Last-Layer
   sections).
 - **Skewb** — Sarah's Cubing Site "Speedskewbin" guide, read directly from the source PDF.
-- **Square-1** — intentionally **none**. Real Square-1 algorithms are dense numeric sequences
-  (e.g. `(3,3)/(1,2)/(4,-2)/...`), and every source consulted while building this disagreed on
-  the exact digits for the same named algorithm — the risk of silently shipping a wrong one
-  outweighed having a starter set. Square-1 still has full puzzle support and Custom Set works
-  normally; add your own once you have a source you trust.
+- **Square-1** — **EO** (`src/puzzles/square1EO.js`, 7 cases: the non-trivial counts of
+  misoriented top-layer edges), from SpeedCubeDB. Real Square-1 algorithms are dense numeric
+  sequences, and every source consulted while building this disagreed on the exact digits for
+  the same named algorithm, so rather than trust the source's listed algorithm text directly,
+  each one here was derived as the literal inverse of the source's own "setup" scramble — see
+  the source note in `square1EO.js` for why that's the more trustworthy value. Add more via the
+  Custom Set editor once you have a source you trust.
 - **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/cll2x2.js`, 40 cases each, 160 total),
   supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
   (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases

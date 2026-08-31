@@ -48,7 +48,7 @@ export default function PracticeArea() {
       {puzzleConfig.controlsType === "square1" ? <Square1Pad /> : <MovePad />}
       <div className={styles.legend}>
         {puzzleConfig.controlsType === "square1"
-          ? "Click a twist amount for the top and/or bottom layer, then slash to swap. Space reveals the algorithm, Enter loads a new case."
+          ? "Click a twist amount for the top and/or bottom layer, then slash to swap (or use the keyboard). Space reveals the algorithm, Enter loads a new case."
           : "Click a face, or use the matching keyboard key shown under each button. Space reveals the algorithm, Enter loads a new case."}
       </div>
     </div>
