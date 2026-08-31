@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alg } from "cubing/alg";
 import { CUSTOM_SET_ID } from "../puzzles/constants";
-import { loadStorage, saveStorage } from "../lib/storage";
+import { loadStorage, saveStorage, loadPracticePrefs, savePracticePrefs } from "../lib/storage";
 
 function emptyCustomSet() {
   return { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases: [] };
@@ -9,6 +9,7 @@ function emptyCustomSet() {
 
 export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlayerRef, learnPlayerRef }) {
   const initialStorage = useMemo(() => loadStorage(puzzleConfig.id), [puzzleConfig]);
+  const initialPracticePrefs = useMemo(() => loadPracticePrefs(), []);
 
   const [allSets, setAllSets] = useState(() =>
     puzzleConfig.builtinSets.length ? puzzleConfig.builtinSets : [emptyCustomSet()],
@@ -47,10 +48,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [timerLabel, setTimerLabel] = useState("0.00");
   const [timerStatus, setTimerStatus] = useState("idle"); // idle | running | solved
 
-  const [autoNextEnabled, setAutoNextEnabled] = useState(true);
-  const [orderedEnabled, setOrderedEnabled] = useState(false);
-  const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(false);
-  const [turnsPerSecond, setTurnsPerSecond] = useState(15);
+  const [orderedEnabled, setOrderedEnabled] = useState(initialPracticePrefs.orderedEnabled);
+  const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(initialPracticePrefs.visibleTurningEnabled);
+  const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
 
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
@@ -80,6 +80,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   useEffect(() => {
     saveStorage(puzzleConfig.id, { stats: persistedStats, checkedCases: persistedChecked, customSetText });
   }, [puzzleConfig, persistedStats, persistedChecked, customSetText]);
+
+  // Persist practice options globally (not per-puzzle) so they carry over
+  // when switching puzzles instead of resetting with the rest of this
+  // puzzle-scoped state.
+  useEffect(() => {
+    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond });
+  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond]);
 
   // Sets an explicit list of case names to a given checked value in one
   // atomic update — used for toggling a single case, a whole group of
@@ -266,10 +273,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setRevealed(true);
     setLastSolveElapsed(elapsed);
     if (currentCase) recordResult(currentCase, elapsed);
-    if (autoNextEnabled) {
-      setTimeout(loadNewPracticeCase, 1100);
-    }
-  }, [stopTimer, currentCase, recordResult, autoNextEnabled, loadNewPracticeCase]);
+  }, [stopTimer, currentCase, recordResult]);
 
   const applyMove = useCallback(
     (move) => {
@@ -538,8 +542,6 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     statusLine,
     statusGood,
 
-    autoNextEnabled,
-    setAutoNextEnabled,
     orderedEnabled,
     setOrderedEnabled,
     visibleTurningEnabled,

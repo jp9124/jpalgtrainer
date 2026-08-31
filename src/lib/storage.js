@@ -4,6 +4,29 @@ function keyFor(puzzleId) {
   return `${STORAGE_PREFIX}:${puzzleId}`;
 }
 
+// Practice options (order/visible-turning/speed) are how someone likes to
+// practice in general, not something tied to one puzzle — stored under a
+// single puzzle-agnostic key so they carry over when switching puzzles,
+// unlike stats/customSetText/checkedCases below.
+const PRACTICE_PREFS_KEY = `${STORAGE_PREFIX}:practice-prefs`;
+
+export function loadPracticePrefs() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PRACTICE_PREFS_KEY));
+    return {
+      orderedEnabled: parsed?.orderedEnabled ?? true,
+      visibleTurningEnabled: parsed?.visibleTurningEnabled ?? false,
+      turnsPerSecond: parsed?.turnsPerSecond ?? 15,
+    };
+  } catch {
+    return { orderedEnabled: true, visibleTurningEnabled: false, turnsPerSecond: 15 };
+  }
+}
+
+export function savePracticePrefs(data) {
+  localStorage.setItem(PRACTICE_PREFS_KEY, JSON.stringify(data));
+}
+
 export function loadStorage(puzzleId) {
   try {
     const parsed = JSON.parse(localStorage.getItem(keyFor(puzzleId)));
