@@ -9,7 +9,7 @@ export const zbllSets = [
   {
     "id": "zbll-t",
     "name": "ZBLL T",
-    "source": "Provided by the project's user, from a personal ZBLL reference (originally a JS object named `zbll_juliette`). Where the source listed alternate algorithms for a case (separated by \"/\"), only the first is kept here.",
+    "source": "Algs from Juliette Sebastien's ZBLL from Tao Yu\'s trainer",
     "cases": [
       {
         "name": "T1",

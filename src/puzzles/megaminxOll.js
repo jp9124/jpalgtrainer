@@ -2,7 +2,7 @@
 export const megaminxOllSets = [{
   "id": "megaminx-oll",
   "name": "OLL",
-  "source": "Supplied by the project's user (ollalgs.js/pllalgs.js). Grouped by the source's own algsGroups_OLL/algsGroups_PLL; a group with more than 6 cases is split in half (a/b). BR/BL/DR were rewritten as a y-rotation conjugate of an existing face (e.g. BR -> y R y') rather than given dedicated keys, each verified to produce an identical resulting pattern to the original token. A leading/embedded \"x'\" in 5 algorithms (a vestigial 3x3-notation artifact -- x/z rotation isn't valid on megaminx here, only y/y') was dropped after confirming the rest of the algorithm still round-trips correctly. The single empty \"solved\" PLL entry is omitted -- not a practicable case. Every case was parsed and round-trip-verified against the real `cubing` engine before being included.",
+  "source": "Supplied from Lucas Kuczaj's Virtminx Trainer. Some algs may not work properly",
   "cases": [
     {
       "name": "1A",

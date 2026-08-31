@@ -3,7 +3,7 @@ export const cll2x2Sets = [
   {
     "id": "cll",
     "name": "CLL",
-    "source": "Supplied by the project's user (2x2algs.txt). Each named group (S/AS/Pi/U/L/T/H) holds several distinct cases from the source, numbered sequentially here (e.g. S1..S6); H has only 4 per method, matching the source. Parenthesized AUF prefixes (e.g. \"(U2)\") are kept as real leading moves, just with the cosmetic parens stripped; the one \"(U/U')\" (either AUF works) took the first option. Every case was parsed and round-trip-verified against the real `cubing` engine before being included.",
+    "source": "Supplied from the \"Best 2x2 Algs\" Google Spreadsheet.",
     "cases": [
       {
         "name": "S1",

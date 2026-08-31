@@ -14,10 +14,7 @@
 // substitution was verified to produce an identical resulting pattern to
 // the original token (not just a plausible-looking one) before being used.
 const source =
-  "CubeSkills' \"5x5 L2E Algorithms\" PDF, supplied by the project's user. Only the primary " +
-  "(bold) algorithm for each case is kept; bolded alternative-angle algorithms shown for some " +
-  "No Parity cases are dropped. The source's 3Rw/3Lw (deep wide) moves are rewritten as an " +
-  "equivalent move+rotation pair (e.g. 3Lw -> x' r) rather than bound to dedicated keys.";
+  "Taken from CubeSkills' \"5x5 L2E Algorithms\" PDF";
 
 const noParitySet = {
   id: "l2e-no-parity",

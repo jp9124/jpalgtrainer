@@ -90,10 +90,6 @@ export default {
   controlsType: "faceTurn",
   controls,
   builtinSets,
-  // cubing.js's default pyraminx camera (longitude 0) is centered exactly on
-  // the L/R seam, so both faces are equally foreshortened. Rotating toward
-  // the right brings R more face-on, which is what most last-layer
-  // recognition (R-heavy algs like Sledgehammer/Hedgeslammer) actually needs.
   cameraLongitude: 0,
   // cubing.js's default latitude (~26.6°) is a fairly low, side-on angle.
   // Raising it gives a top-down view of the U layer, which is what last-layer

@@ -41,4 +41,5 @@ export default {
   controlsType: "faceTurn",
   controls,
   builtinSets,
+  cameraLongitude: 45,
 };
