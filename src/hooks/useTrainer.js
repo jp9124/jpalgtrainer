@@ -320,7 +320,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // No active case (free play) still turns the puzzle — it's the timer
       // and solved-detection below that require a real case to time against.
       if (!scrambledPatternRef.current || !kpuzzle) return;
-      if (currentCase && timerStatus !== "running") startTimer();
+      // Only (re)start the timer from a fresh, untouched case — once solved,
+      // further moves (e.g. drilling the case again after a space-triggered
+      // reset) shouldn't restart the timer or disturb the "Solved!" status.
+      if (currentCase && timerStatus === "idle") startTimer();
 
       try {
         // applyAlg (not applyMove) so compound tokens like Square-1's
@@ -334,7 +337,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       solveMovesRef.current = [...solveMovesRef.current, move];
       animateMoveOnPracticePlayer(move);
 
-      if (currentCase && isSolved(currentPattern())) {
+      if (currentCase && timerStatus !== "solved" && isSolved(currentPattern())) {
         onSolved();
       }
     },
@@ -394,14 +397,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setRevealed(true);
     showLearnCase(currentCase); // also load it into the reference panel so it can be watched
 
-    if (timerStatus !== "solved") {
-      // Reset the practice cube back to the scrambled state so the case can
-      // still be practiced (now with the algorithm visible) instead of being
-      // left wherever exploratory moves happened to leave it.
-      solveMovesRef.current = [];
-      syncPracticePlayer();
-    }
-  }, [currentCase, showLearnCase, timerStatus, syncPracticePlayer]);
+    // Reset the practice cube back to the scrambled state so the case can
+    // still be practiced (now with the algorithm visible) instead of being
+    // left wherever exploratory moves happened to leave it — even after it's
+    // already been solved once, so space can be used to drill the same case
+    // again without starting a new one via Enter. timerStatus/statusLine are
+    // left untouched, so "Solved!" keeps showing until a new case is loaded.
+    solveMovesRef.current = [];
+    syncPracticePlayer();
+  }, [currentCase, showLearnCase, syncPracticePlayer]);
 
   // With visible turning on, hand the whole alg to the player's native
   // playback (respecting tempoScale) for smooth turning. Otherwise fall
