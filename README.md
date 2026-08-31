@@ -105,6 +105,19 @@ collection of named algorithms actually verified against a public source, not an
   the exact digits for the same named algorithm — the risk of silently shipping a wrong one
   outweighed having a starter set. Square-1 still has full puzzle support and Custom Set works
   normally; add your own once you have a source you trust.
+- **2x2, 5x5** — intentionally **none** for now. Added for free-turning practice via the
+  Custom Set editor.
+- **3x3** — **ZBLL** (`src/puzzles/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
+  472 cases total), supplied directly by this project's user from a personal ZBLL reference
+  (a JS object originally named `zbll_juliette`). Where that source listed alternate algorithms
+  for a case (`/`-separated), only the first is kept. Every one of the 472 algorithms was
+  parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
+  then its inverse, returns to solved) before being included.
+
+2x2/3x3/5x5's keyboard layout (`src/puzzles/cubeControls.js`) covers face turns, wide turns,
+slice moves (M/E/S), and whole-cube rotations (x/y/z) — but unlike FTO/Megaminx's layout, it
+isn't borrowed from any official cubing.js/Twizzle source, since none exists for these in this
+app; it's this project's own key choices, documented as such in that file.
 
 The Custom Set box exists precisely to fill these gaps — paste whatever method sheet you
 actually use.

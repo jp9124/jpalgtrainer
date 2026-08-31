@@ -39,6 +39,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   const [autoNextEnabled, setAutoNextEnabled] = useState(true);
   const [orderedEnabled, setOrderedEnabled] = useState(false);
+  const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(false);
+  const [turnsPerSecond, setTurnsPerSecond] = useState(15);
 
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
@@ -127,6 +129,34 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     player.alg = full;
     player.jumpToEnd();
   }, [practicePlayerRef]);
+
+  // tempoScale is ~1:1 with quarter-turns-per-second (a tempoScale of N means
+  // a single quarter turn, whose base duration is 1000ms, takes 1000/N ms) —
+  // see cubing's defaultDurationForAmount. Kept in sync on both players
+  // whenever the desired speed changes, independent of whether visible
+  // turning is currently on (jumpToEnd() ignores it either way).
+  useEffect(() => {
+    if (practicePlayerRef.current) practicePlayerRef.current.tempoScale = turnsPerSecond;
+    if (learnPlayerRef.current) learnPlayerRef.current.tempoScale = turnsPerSecond;
+  }, [turnsPerSecond, practicePlayerRef, learnPlayerRef, kpuzzle]);
+
+  // Animate a single applied move by appending it to the player's current
+  // alg (cubing's mechanism for live/incremental move input — see
+  // experimentalAddMove) instead of the instant "reset .alg + jumpToEnd()"
+  // used everywhere else. Only used for moves the user actually turns;
+  // case loads/undo/reset still snap instantly via syncPracticePlayer.
+  const animateMoveOnPracticePlayer = useCallback(
+    (move) => {
+      const player = practicePlayerRef.current;
+      if (!player) return;
+      if (visibleTurningEnabled) {
+        player.experimentalAddMove(move);
+      } else {
+        syncPracticePlayer();
+      }
+    },
+    [practicePlayerRef, visibleTurningEnabled, syncPracticePlayer],
+  );
 
   const currentPattern = useCallback(() => {
     const moves = solveMovesRef.current;
@@ -246,13 +276,22 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       }
 
       solveMovesRef.current = [...solveMovesRef.current, move];
-      syncPracticePlayer();
+      animateMoveOnPracticePlayer(move);
 
       if (currentPattern().isIdentical(solvedPattern)) {
         onSolved();
       }
     },
-    [currentCase, kpuzzle, timerStatus, startTimer, syncPracticePlayer, currentPattern, solvedPattern, onSolved],
+    [
+      currentCase,
+      kpuzzle,
+      timerStatus,
+      startTimer,
+      animateMoveOnPracticePlayer,
+      currentPattern,
+      solvedPattern,
+      onSolved,
+    ],
   );
 
   const undoMove = useCallback(() => {
@@ -306,14 +345,22 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     }
   }, [currentCase, showLearnCase, timerStatus, syncPracticePlayer]);
 
-  // Step through the algorithm's moves one at a time (each step re-sets
-  // .alg to the scramble plus the moves done so far, then jumps to the end
-  // of that — the same "instant jump per update" mechanism Practice uses
-  // for every move you click), landing on solved.
+  // With visible turning on, hand the whole alg to the player's native
+  // playback (respecting tempoScale) for smooth turning. Otherwise fall
+  // back to the original behavior: step through the moves one at a time,
+  // each step an instant jump to "scramble + moves done so far".
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
+
+    if (visibleTurningEnabled) {
+      player.alg = `${scrambleAlg} ${learnCase.alg}`;
+      player.jumpToStart();
+      player.play();
+      return;
+    }
+
     const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
 
     player.alg = scrambleAlg;
@@ -326,7 +373,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         player.jumpToEnd();
       }, (i + 1) * 400);
     });
-  }, [learnPlayerRef, learnCase]);
+  }, [learnPlayerRef, learnCase, visibleTurningEnabled]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
@@ -485,6 +532,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setAutoNextEnabled,
     orderedEnabled,
     setOrderedEnabled,
+    visibleTurningEnabled,
+    setVisibleTurningEnabled,
+    turnsPerSecond,
+    setTurnsPerSecond,
 
     customSetText,
     setCustomSetText,
