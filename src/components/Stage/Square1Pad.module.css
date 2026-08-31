@@ -24,9 +24,13 @@
 }
 
 .row button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   font-family: var(--mono);
   font-size: 12px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   min-width: 30px;
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -40,6 +44,10 @@
 }
 
 .slash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   font-family: var(--mono);
   font-size: 13px;
   padding: 8px 18px;
@@ -54,4 +62,20 @@
 .slash:hover {
   background: var(--accent);
   color: #fff;
+}
+
+.moveLabel {
+  font-weight: 600;
+}
+
+.key {
+  display: block;
+  font-size: 9px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-weight: 400;
+}
+
+.slash:hover .key {
+  color: rgba(255, 255, 255, 0.8);
 }

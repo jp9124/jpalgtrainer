@@ -17,12 +17,12 @@ const controls = [
   { label: "/", move: "/", code: "KeyK", keyLabel: "K" },
   { label: "(-1,0)", move: "(-1,0)", code: "KeyF", keyLabel: "F" },
   { label: "(1,0)", move: "(1,0)", code: "KeyJ", keyLabel: "J" },
-  { label: "(-2,0)", move: "(-3,0)", code: "KeyG", keyLabel: "G" },
-  { label: "(2,0)", move: "(3,0)", code: "KeyH", keyLabel: "H" },
+  { label: "(-3,0)", move: "(-3,0)", code: "KeyG", keyLabel: "G" },
+  { label: "(3,0)", move: "(3,0)", code: "KeyH", keyLabel: "H" },
   { label: "(0,1)", move: "(0,1)", code: "KeyS", keyLabel: "S" },
   { label: "(0,-1)", move: "(0,-1)", code: "KeyL", keyLabel: "L" },
-  { label: "(0,2)", move: "(0,3)", code: "KeyW", keyLabel: "W" },
-  { label: "(0,-2)", move: "(0,-3)", code: "KeyO", keyLabel: "O" },
+  { label: "(0,3)", move: "(0,3)", code: "KeyW", keyLabel: "W" },
+  { label: "(0,-3)", move: "(0,-3)", code: "KeyO", keyLabel: "O" },
 ];
 
 // Real Square-1 algorithms are dense numeric sequences, and most sources
