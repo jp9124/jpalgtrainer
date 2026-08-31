@@ -114,10 +114,12 @@ collection of named algorithms actually verified against a public source, not an
   parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
   then its inverse, returns to solved) before being included.
 
-2x2/3x3/5x5's keyboard layout (`src/puzzles/cubeControls.js`) covers face turns, wide turns,
-slice moves (M/E/S), and whole-cube rotations (x/y/z) — but unlike FTO/Megaminx's layout, it
-isn't borrowed from any official cubing.js/Twizzle source, since none exists for these in this
-app; it's this project's own key choices, documented as such in that file.
+2x2/3x3/5x5's keyboard layout (`src/puzzles/cubeControls.js`) covers face turns, r/l wide
+turns, slice moves (M/E/S), and whole-cube rotations (x/y/z). It isn't from cubing.js/Twizzle
+(no such official layout exists for these here), but it is a real external layout — a
+`defaultKeymaps`/`KeyCombo`-style binding list from an existing cubing web app, supplied by
+this project's user — not one invented for this project. It includes one modifier binding:
+S/S' reuse F/F's physical keys with Shift held.
 
 The Custom Set box exists precisely to fill these gaps — paste whatever method sheet you
 actually use.

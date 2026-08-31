@@ -1,4 +1,4 @@
-import { cubeControls } from "./cubeControls";
+import { cubeControls, cubeKeyAliases } from "./cubeControls";
 
 // No built-in set yet — see README.md's "About the built-in algorithms"
 // section. Paste your own via the Custom Set editor.
@@ -11,5 +11,6 @@ export default {
   cubingPuzzleId: "5x5x5",
   controlsType: "faceTurn",
   controls: cubeControls,
+  keyAliases: cubeKeyAliases,
   builtinSets,
 };

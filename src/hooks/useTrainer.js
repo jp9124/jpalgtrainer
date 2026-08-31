@@ -19,11 +19,21 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     [allSets, activeSetId],
   );
 
+  // Most bindings are keyed by e.code alone. A control can also set
+  // `shift: true` to require Shift held (used by 2x2/3x3/5x5's S/S', which
+  // reuse F/F's physical keys) — those go in the map under a `shift+`
+  // prefixed key, checked first so plain presses of that same physical key
+  // still fall through to the unshifted binding. `keyAliases` (if present)
+  // registers extra keyboard-only bindings that don't get their own move-pad
+  // button (e.g. a second physical key for a move that already has one).
   const keyToMove = useMemo(() => {
     const map = {};
-    for (const c of puzzleConfig.controls ?? []) {
-      if (c.code) map[c.code] = c.move;
-    }
+    const register = ({ code, move, shift }) => {
+      if (!code) return;
+      map[shift ? `shift+${code}` : code] = move;
+    };
+    for (const c of puzzleConfig.controls ?? []) register(c);
+    for (const a of puzzleConfig.keyAliases ?? []) register(a);
     return map;
   }, [puzzleConfig]);
 
@@ -483,7 +493,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         return;
       }
 
-      const move = keyToMove[e.code];
+      const move = (e.shiftKey && keyToMove[`shift+${e.code}`]) || keyToMove[e.code];
       if (move) {
         e.preventDefault();
         applyMove(move);

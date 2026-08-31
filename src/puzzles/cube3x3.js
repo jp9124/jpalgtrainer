@@ -1,4 +1,4 @@
-import { cubeControls } from "./cubeControls";
+import { cubeControls, cubeKeyAliases } from "./cubeControls";
 import { zbllSets } from "./zbll";
 
 export default {
@@ -8,5 +8,6 @@ export default {
   cubingPuzzleId: "3x3x3",
   controlsType: "faceTurn",
   controls: cubeControls,
+  keyAliases: cubeKeyAliases,
   builtinSets: zbllSets,
 };
