@@ -94,5 +94,12 @@ export default {
   // the L/R seam, so both faces are equally foreshortened. Rotating toward
   // the right brings R more face-on, which is what most last-layer
   // recognition (R-heavy algs like Sledgehammer/Hedgeslammer) actually needs.
-  cameraLongitude: 35,
+  cameraLongitude: 0,
+  // cubing.js's default latitude (~26.6°) is a fairly low, side-on angle.
+  // Raising it gives a top-down view of the U layer, which is what last-layer
+  // recognition is actually looking at. This must exceed the default
+  // camera-latitude-limit of 35° (see cameraLatitudeLimit below), or the
+  // player silently clamps the requested latitude back down to 35°.
+  cameraLatitude: 90,
+  cameraLatitudeLimit: 90,
 };
