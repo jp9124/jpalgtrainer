@@ -116,8 +116,13 @@ collection of named algorithms actually verified against a public source, not an
   the exact digits for the same named algorithm — the risk of silently shipping a wrong one
   outweighed having a starter set. Square-1 still has full puzzle support and Custom Set works
   normally; add your own once you have a source you trust.
-- **2x2** — intentionally **none** for now. Added for free-turning practice via the Custom Set
-  editor.
+- **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/cll2x2.js`, 40 cases each, 160 total),
+  supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
+  (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases
+  per method, matching the source. Parenthesized AUF prefixes (e.g. `(U2)`) are kept as real
+  leading moves, just with the cosmetic parens stripped; the source's one `(U/U')` (either AUF
+  works) took the first option. Every case was parsed and round-trip-verified against the real
+  `cubing` engine.
 - **3x3** — **ZBLL** (`src/puzzles/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
   472 cases total), supplied directly by this project's user from a personal ZBLL reference
   (a JS object originally named `zbll_juliette`). Where that source listed alternate algorithms

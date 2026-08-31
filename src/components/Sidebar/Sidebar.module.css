@@ -151,6 +151,39 @@
   margin-top: 2px;
 }
 
+.setSelectorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setSelectorRow select {
+  flex: 1;
+  min-width: 0;
+}
+
+.infoButton {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.infoButton:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
 .customTextarea {
   min-height: 220px;
 }

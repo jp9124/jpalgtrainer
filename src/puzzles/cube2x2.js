@@ -1,8 +1,5 @@
 import { cube2x2Controls } from "./cubeControls";
-
-// No built-in set yet — see README.md's "About the built-in algorithms"
-// section. Paste your own via the Custom Set editor.
-const builtinSets = [];
+import { cll2x2Sets } from "./cll2x2";
 
 export default {
   id: "2x2x2",
@@ -11,5 +8,5 @@ export default {
   cubingPuzzleId: "2x2x2",
   controlsType: "faceTurn",
   controls: cube2x2Controls,
-  builtinSets,
+  builtinSets: cll2x2Sets,
 };
