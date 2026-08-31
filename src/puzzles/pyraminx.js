@@ -13,8 +13,11 @@ const controls = [
   { label: "L'", move: "L'", code: "KeyE", keyLabel: "E" },
   { label: "B", move: "B", code: "KeyW", keyLabel: "W" },
   { label: "B'", move: "B'", code: "KeyO", keyLabel: "O" },
-  { label: "y", move: "y", code: "KeyA", keyLabel: "A" },
-  { label: "y'", move: "y'", code: "Semicolon", keyLabel: ";" },
+  // Swapped relative to the literal cubing.js token: on this puzzle "y"
+  // rotated the opposite way a solver would expect from every other puzzle
+  // in this app, so the label now maps to the other token to match.
+  { label: "y", move: "y'", code: "KeyA", keyLabel: "A" },
+  { label: "y'", move: "y", code: "Semicolon", keyLabel: ";" },
 ];
 
 // "The Pyraminx Sheet" (L4E method cheat sheet). One set, grouped by the
