@@ -1,7 +1,15 @@
+import { megaminxOllSets } from "./megaminxOll";
+import { megaminxPllSets } from "./megaminxPll";
+
 // Reuses the same physical key positions as FTO's official layout for the
 // 6 primary faces (R, B, L, U, F share identical key placements across
 // puzzles in this app — only FR is megaminx-specific), matching the primary
 // 12 keys from cubing.js's own megaminxKeyMapping.ts.
+//
+// bR/bR'/dR/dR' have no such official source and no y-rotation-conjugate
+// equivalent to an existing face (verified against the real engine — see
+// megaminxOll.js/megaminxPll.js's source note), so these four keys are this
+// project's own choice, not borrowed from anywhere.
 const controls = [
   { label: "U", move: "U", code: "KeyJ", keyLabel: "J" },
   { label: "U'", move: "U'", code: "KeyF", keyLabel: "F" },
@@ -17,26 +25,13 @@ const controls = [
   { label: "FR'", move: "FR'", code: "KeyL", keyLabel: "L" },
   { label: "y", move: "y", code: "KeyA", keyLabel: "A" },
   { label: "y'", move: "y'", code: "Semicolon", keyLabel: ";" },
+  { label: "bR", move: "bR", code: "KeyB", keyLabel: "B" },
+  { label: "bR'", move: "bR'", code: "KeyC", keyLabel: "C" },
+  { label: "dR", move: "dR", code: "KeyN", keyLabel: "N" },
+  { label: "dR'", move: "dR'", code: "KeyM", keyLabel: "M" },
 ];
 
-// Megaminx doesn't have its own standardized OLL/PLL vocabulary the way 3x3
-// does — most guides explicitly teach reusing 3x3's own last-layer
-// algorithms directly, since they still work on megaminx's last layer.
-// Sourced from SpeedCubeShop's Megaminx last-layer guide.
-const builtinSets = [
-  {
-    id: "corner-orientation",
-    name: "Corner Orientation",
-    source: "SpeedCubeShop Megaminx last-layer guide (reused 3x3 Sune)",
-    cases: [{ name: "Sune", alg: "R U R' U R U2 R'" }],
-  },
-  {
-    id: "edge-permutation",
-    name: "Edge Permutation",
-    source: "SpeedCubeShop Megaminx last-layer guide (reused 3x3 T-perm)",
-    cases: [{ name: "T-perm", alg: "R U R' U' R' F R2 U' R' U' R U R' F'" }],
-  },
-];
+const builtinSets = [...megaminxOllSets, ...megaminxPllSets];
 
 export default {
   id: "megaminx",

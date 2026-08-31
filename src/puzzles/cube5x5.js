@@ -1,8 +1,5 @@
 import { cubeControls, cubeKeyAliases } from "./cubeControls";
-
-// No built-in set yet — see README.md's "About the built-in algorithms"
-// section. Paste your own via the Custom Set editor.
-const builtinSets = [];
+import { l2eSets } from "./l2e";
 
 export default {
   id: "5x5x5",
@@ -12,5 +9,5 @@ export default {
   controlsType: "faceTurn",
   controls: cubeControls,
   keyAliases: cubeKeyAliases,
-  builtinSets,
+  builtinSets: l2eSets,
 };

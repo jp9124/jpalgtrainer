@@ -95,8 +95,19 @@ collection of named algorithms actually verified against a public source, not an
 
 - **FTO** — Cubelelo's beginner guide, and an FTO notes document using Michael
   Gottlieb-style notation.
-- **Megaminx** — SpeedCubeShop's last-layer guide, which explicitly teaches reusing standard
-  3x3 algorithms (Sune, T-perm) directly on Megaminx's last layer.
+- **Megaminx** — **OLL** (`src/puzzles/megaminxOll.js`, 178 cases) and **PLL**
+  (`src/puzzles/megaminxPll.js`, 151 cases), supplied by this project's user as
+  `ollalgs.js`/`pllalgs.js`. Grouped by the source's own numbered/lettered groups (e.g. OLL
+  "Group 1", PLL "Group C"); a group with more than 6 cases is split in half (e.g. "Group Ca"/
+  "Group Cb"). The single empty "solved" PLL entry is omitted — not a practicable case. Every
+  case was parsed and round-trip-verified against the real `cubing` engine. Three of the
+  source's move families (BR/BL/DR) turned out to be a y-rotation conjugate of a face this app
+  already has a key for (e.g. BR = y R y') and were rewritten to reuse it, each rewrite
+  verified to produce the identical resulting pattern to the original token; bR/dR had no such
+  equivalent, so those got two dedicated keys instead (see the source note in
+  `megaminxOll.js` for detail). This replaces the previous small "Corner Orientation"/"Edge
+  Permutation" sets, which just pointed at reusing 3x3's own Sune/T-perm on Megaminx's last
+  layer (per SpeedCubeShop's guide) — still true, but superseded by full OLL/PLL coverage.
 - **Pyraminx** — the Speedsolving Wiki's Pyraminx algorithms page (ELL and Last-Layer
   sections).
 - **Skewb** — Sarah's Cubing Site "Speedskewbin" guide, read directly from the source PDF.
@@ -105,14 +116,23 @@ collection of named algorithms actually verified against a public source, not an
   the exact digits for the same named algorithm — the risk of silently shipping a wrong one
   outweighed having a starter set. Square-1 still has full puzzle support and Custom Set works
   normally; add your own once you have a source you trust.
-- **2x2, 5x5** — intentionally **none** for now. Added for free-turning practice via the
-  Custom Set editor.
+- **2x2** — intentionally **none** for now. Added for free-turning practice via the Custom Set
+  editor.
 - **3x3** — **ZBLL** (`src/puzzles/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
   472 cases total), supplied directly by this project's user from a personal ZBLL reference
   (a JS object originally named `zbll_juliette`). Where that source listed alternate algorithms
   for a case (`/`-separated), only the first is kept. Every one of the 472 algorithms was
   parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
   then its inverse, returns to solved) before being included.
+- **5x5** — **L2E** (Last Two Edges, `src/puzzles/l2e.js`), split into "No Parity" (4 cases)
+  and "Parity" (8 cases), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
+  user. The PDF shows a primary (bold) algorithm per case and, for some No Parity cases, a
+  bolded alternative-angle algorithm below it — only the primary one is kept. Four cases used
+  3Rw/3Lw (a deep, 3-layer wide turn with no key on this app's layout); rather than inventing
+  dedicated keys for a move needed nowhere else, those four were rewritten to an equivalent
+  move+rotation pair (3Rw = x l, 3Rw' = x' l', 3Lw = x' r, 3Lw' = x r'), each verified to
+  produce an identical resulting pattern to the original token before being used. Same
+  parse-and-round-trip verification as ZBLL above.
 
 2x2/3x3/5x5's keyboard layout (`src/puzzles/cubeControls.js`) covers face turns, r/l wide
 turns, slice moves (M/E/S), and whole-cube rotations (x/y/z). It isn't from cubing.js/Twizzle
