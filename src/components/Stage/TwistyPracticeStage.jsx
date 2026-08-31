@@ -14,6 +14,7 @@ export default function TwistyPracticeStage() {
       background="none"
       hint-facelets="none"
       control-panel="none"
+      camera-longitude={puzzleConfig.cameraLongitude}
       class={styles.practiceTwisty}
     />
   );

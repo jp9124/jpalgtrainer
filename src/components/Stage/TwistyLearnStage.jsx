@@ -17,6 +17,7 @@ export default function TwistyLearnStage() {
       background="none"
       hint-facelets="none"
       control-panel="none"
+      camera-longitude={puzzleConfig.cameraLongitude}
       class={styles.learnTwisty}
     />
   );
