@@ -35,8 +35,8 @@ const controls = [
   { label: "Lv'", move: "Lv'", code: "KeyT", keyLabel: "T" },
   { label: "Rv", move: "Rv", code: "KeyY", keyLabel: "Y" },
   { label: "Rv'", move: "Rv'", code: "KeyN", keyLabel: "N" },
-  { label: "T", move: "T", code: "KeyQ", keyLabel: "Q" },
-  { label: "T'", move: "T'", code: "KeyP", keyLabel: "P" },
+  { label: "T", move: "T", code: "KeyP", keyLabel: "P" },
+  { label: "T'", move: "T'", code: "KeyQ", keyLabel: "Q" },
   // Wide moves (two layers together) — needed by LBT and TCP.
   { label: "u", move: "u", code: "Digit1", keyLabel: "1" },
   { label: "u'", move: "u'", code: "Digit2", keyLabel: "2" },
