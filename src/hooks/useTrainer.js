@@ -52,6 +52,17 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(initialPracticePrefs.visibleTurningEnabled);
   const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
 
+  // visibleTurningEnabled is a global preference (persisted independent of
+  // puzzle, see loadPracticePrefs/savePracticePrefs), but Square-1's moves
+  // aren't plain quantum turns (they're twist/slash groupings) and cubing's
+  // experimentalAddMove — the animation path visible turning relies on —
+  // doesn't handle them correctly, breaking the puzzle's turning. Rather
+  // than clobber the user's global preference when they're on Square-1
+  // (which would also silently turn it back on for other puzzles later),
+  // every place that acts on visibleTurningEnabled uses this puzzle-aware
+  // override instead.
+  const visibleTurningActive = visibleTurningEnabled && puzzleConfig.id !== "square1";
+
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
   const [customSetText, setCustomSetText] = useState(() => initialStorage.customSetText);
@@ -165,13 +176,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     (move) => {
       const player = practicePlayerRef.current;
       if (!player) return;
-      if (visibleTurningEnabled) {
+      if (visibleTurningActive) {
         player.experimentalAddMove(move);
       } else {
         syncPracticePlayer();
       }
     },
-    [practicePlayerRef, visibleTurningEnabled, syncPracticePlayer],
+    [practicePlayerRef, visibleTurningActive, syncPracticePlayer],
   );
 
   const currentPattern = useCallback(() => {
@@ -416,7 +427,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
 
-    if (visibleTurningEnabled) {
+    if (visibleTurningActive) {
       player.alg = `${scrambleAlg} ${learnCase.alg}`;
       player.jumpToStart();
       player.play();
@@ -435,7 +446,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         player.jumpToEnd();
       }, (i + 1) * 400);
     });
-  }, [learnPlayerRef, learnCase, visibleTurningEnabled]);
+  }, [learnPlayerRef, learnCase, visibleTurningActive]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
