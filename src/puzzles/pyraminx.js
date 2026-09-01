@@ -1,5 +1,5 @@
-import ml4eRightSet from "./pyraminx-ml4e-right";
-import ml4eLeftSet from "./pyraminx-ml4e-left";
+import ml4eRightSet from "./algs/pyraminx-ml4e-right";
+import ml4eLeftSet from "./algs/pyraminx-ml4e-left";
 
 // No official cubing.js keyboard layout exists for Pyraminx, so this reuses
 // the same physical key positions as FTO/Megaminx for the matching face

@@ -1,6 +1,6 @@
-import lbtSet from "./fto-lbt";
-import lp1Set from "./fto-1lp";
-import tcpSet from "./fto-tcp";
+import lbtSet from "./algs/fto-lbt";
+import lp1Set from "./algs/fto-1lp";
+import tcpSet from "./algs/fto-tcp";
 
 // U/F/R/L/D/B are the official cubing.js / Twizzle FTO keyboard layout (see
 // ftoKeyMapping.ts in the cubing.js source) — reused here so keyboard

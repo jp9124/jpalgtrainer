@@ -339,15 +339,26 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       } catch {
         setupAlg = "";
       }
+      // c.setupAlg (only present on cases that need it, e.g. FTO 1LP) is a
+      // fixed real move sequence the source itself says to apply BEFORE
+      // inverting the case's own alg to reach that case's recognized
+      // position — unlike rotationAlg/preAuf/postAuf, this isn't inverted:
+      // it's prepended to the scramble as-is, and folded into what counts
+      // as "solved" too, since solving the case's alg from there lands back
+      // on c.setupAlg's state, not on the puzzle's true solved state (see
+      // the source note in fto-1lp.js for why the case data is shaped like
+      // this).
+      //
       // rotationAlg (empty unless color-neutral picked an orientation for
       // this case) goes first: rotate the solved reference, then scramble
       // relative to THAT — so the case's alg text and solved-check both
       // stay correct without needing to touch c.alg at all (see
       // randomOrientationAlg's source note for why this works).
-      const fullSetupAlg = [rotationAlg, setupAlg].filter(Boolean).join(" ");
+      const fullSetupAlg = [rotationAlg, c.setupAlg, setupAlg].filter(Boolean).join(" ");
       scrambleAlgRef.current = fullSetupAlg;
       scrambledPatternRef.current = solvedPattern.applyAlg(fullSetupAlg);
-      targetPatternRef.current = rotationAlg ? solvedPattern.applyAlg(rotationAlg) : solvedPattern;
+      const targetSetupAlg = [rotationAlg, c.setupAlg].filter(Boolean).join(" ");
+      targetPatternRef.current = targetSetupAlg ? solvedPattern.applyAlg(targetSetupAlg) : solvedPattern;
 
       setTimerLabel("0.00");
       setTimerStatus("idle");
@@ -504,7 +515,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // throughout the whole app.
   function learnScrambleAlgFor(c) {
     try {
-      return new Alg(c.alg).invert().toString();
+      const inverted = new Alg(c.alg).invert().toString();
+      // c.setupAlg (see loadPracticeCase) goes first, un-inverted — it's a
+      // fixed precondition for reaching this case's recognized position, not
+      // part of the solve being demonstrated.
+      return [c.setupAlg, inverted].filter(Boolean).join(" ");
     } catch {
       return "";
     }

@@ -1,4 +1,4 @@
-import eoSet from "./square1EO";
+import eoSet from "./algs/square1EO";
 
 // Square-1 doesn't turn like the other puzzles here — instead of discrete
 // faces, it has a top-layer twist, a bottom-layer twist (each in twelfths,

@@ -1,5 +1,5 @@
 import { cube2x2Controls } from "./cubeControls";
-import { cll2x2Sets } from "./cll2x2";
+import { cll2x2Sets } from "./algs/cll2x2";
 
 export default {
   id: "2x2x2",

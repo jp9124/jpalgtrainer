@@ -1,5 +1,5 @@
-import { megaminxOllSets } from "./megaminxOll";
-import { megaminxPllSets } from "./megaminxPll";
+import { megaminxOllSets } from "./algs/megaminxOll";
+import { megaminxPllSets } from "./algs/megaminxPll";
 
 // Reuses the same physical key positions as FTO's official layout for the
 // 6 primary faces (R, B, L, U, F share identical key placements across

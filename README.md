@@ -94,9 +94,14 @@ collection of named algorithms actually verified against a public source, not an
 "probably right" one:
 
 - **FTO** — Cubelelo's beginner guide, and an FTO notes document using Michael
-  Gottlieb-style notation.
-- **Megaminx** — **OLL** (`src/puzzles/megaminxOll.js`, 178 cases) and **PLL**
-  (`src/puzzles/megaminxPll.js`, 151 cases), supplied by this project's user as
+  Gottlieb-style notation, plus **1LP** (`src/puzzles/algs/fto-1lp.js`, 11 cases), from
+  "1LP-Rotationless-V3.pdf". H/S ("hedge"/"sledge") triggers and the "Uo" whole-puzzle
+  rotation notation are translated to real moves (`R B' R' B`, `R' L R L'`, `Uv`); where a
+  case listed multiple equivalent algorithms (one per recognition angle), only the one
+  needing no incoming AUF is kept. The 12th listed case ("6c") is the already-solved state
+  and is omitted.
+- **Megaminx** — **OLL** (`src/puzzles/algs/megaminxOll.js`, 178 cases) and **PLL**
+  (`src/puzzles/algs/megaminxPll.js`, 151 cases), supplied by this project's user as
   `ollalgs.js`/`pllalgs.js`. Grouped by the source's own numbered/lettered groups (e.g. OLL
   "Group 1", PLL "Group C"); a group with more than 6 cases is split in half (e.g. "Group Ca"/
   "Group Cb"). The single empty "solved" PLL entry is omitted — not a practicable case. Every
@@ -105,33 +110,33 @@ collection of named algorithms actually verified against a public source, not an
   already has a key for (e.g. BR = y R y') and were rewritten to reuse it, each rewrite
   verified to produce the identical resulting pattern to the original token; bR/dR had no such
   equivalent, so those got two dedicated keys instead (see the source note in
-  `megaminxOll.js` for detail). This replaces the previous small "Corner Orientation"/"Edge
+  `algs/megaminxOll.js` for detail). This replaces the previous small "Corner Orientation"/"Edge
   Permutation" sets, which just pointed at reusing 3x3's own Sune/T-perm on Megaminx's last
   layer (per SpeedCubeShop's guide) — still true, but superseded by full OLL/PLL coverage.
 - **Pyraminx** — the Speedsolving Wiki's Pyraminx algorithms page (ELL and Last-Layer
   sections).
 - **Skewb** — Sarah's Cubing Site "Speedskewbin" guide, read directly from the source PDF.
-- **Square-1** — **EO** (`src/puzzles/square1EO.js`, 7 cases: the non-trivial counts of
+- **Square-1** — **EO** (`src/puzzles/algs/square1EO.js`, 7 cases: the non-trivial counts of
   misoriented top-layer edges), from SpeedCubeDB. Real Square-1 algorithms are dense numeric
   sequences, and every source consulted while building this disagreed on the exact digits for
   the same named algorithm, so rather than trust the source's listed algorithm text directly,
   each one here was derived as the literal inverse of the source's own "setup" scramble — see
-  the source note in `square1EO.js` for why that's the more trustworthy value. Add more via the
+  the source note in `algs/square1EO.js` for why that's the more trustworthy value. Add more via the
   Custom Set editor once you have a source you trust.
-- **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/cll2x2.js`, 40 cases each, 160 total),
+- **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/algs/cll2x2.js`, 40 cases each, 160 total),
   supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
   (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases
   per method, matching the source. Parenthesized AUF prefixes (e.g. `(U2)`) are kept as real
   leading moves, just with the cosmetic parens stripped; the source's one `(U/U')` (either AUF
   works) took the first option. Every case was parsed and round-trip-verified against the real
   `cubing` engine.
-- **3x3** — **ZBLL** (`src/puzzles/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
+- **3x3** — **ZBLL** (`src/puzzles/algs/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
   472 cases total), supplied directly by this project's user from a personal ZBLL reference
   (a JS object originally named `zbll_juliette`). Where that source listed alternate algorithms
   for a case (`/`-separated), only the first is kept. Every one of the 472 algorithms was
   parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
   then its inverse, returns to solved) before being included.
-- **5x5** — **L2E** (Last Two Edges, `src/puzzles/l2e.js`), split into "No Parity" (4 cases)
+- **5x5** — **L2E** (Last Two Edges, `src/puzzles/algs/l2e.js`), split into "No Parity" (4 cases)
   and "Parity" (8 cases), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
   user. The PDF shows a primary (bold) algorithm per case and, for some No Parity cases, a
   bolded alternative-angle algorithm below it — only the primary one is kept. Four cases used
