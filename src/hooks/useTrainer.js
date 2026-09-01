@@ -69,6 +69,54 @@ function randomAufAlg(puzzleId) {
   return Array(amount).fill("U").join(" ");
 }
 
+// Random AUF folds plain "U" turns onto the front/back of a case's alg (see
+// loadPracticeCase), which can leave adjacent U moves sitting next to each
+// other (either two runs of AUF butting up against a case alg that itself
+// starts/ends with U, or the AUF run itself once amount > 1). Collapses any
+// run of consecutive U-family moves into a single canonical turn (mod this
+// puzzle's own U order — e.g. FTO's is 3, not the usual 4), same shorthand
+// a solver would use by hand: prefer the shorter of a direct vs. inverted
+// count (3 turns on a 4-order face is "U'", not "U3"), and drop the move
+// entirely if the run cancels out completely.
+function parseUAmount(token) {
+  const m = /^U(\d*)('?)$/.exec(token);
+  if (!m) return null;
+  const n = m[1] ? parseInt(m[1], 10) : 1;
+  return m[2] ? -n : n;
+}
+
+function formatUAmount(amount, order) {
+  const normalized = ((amount % order) + order) % order;
+  if (normalized === 0) return "";
+  const complement = order - normalized;
+  if (normalized <= complement) return normalized === 1 ? "U" : `U${normalized}`;
+  return complement === 1 ? "U'" : `U${complement}'`;
+}
+
+function mergeUMoves(algText, order) {
+  if (!order) return algText;
+  const tokens = algText.trim().split(/\s+/).filter(Boolean);
+  const merged = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const amount = parseUAmount(tokens[i]);
+    if (amount === null) {
+      merged.push(tokens[i]);
+      i++;
+      continue;
+    }
+    let sum = amount;
+    i++;
+    while (i < tokens.length && parseUAmount(tokens[i]) !== null) {
+      sum += parseUAmount(tokens[i]);
+      i++;
+    }
+    const combined = formatUAmount(sum, order);
+    if (combined) merged.push(combined);
+  }
+  return merged.join(" ");
+}
+
 export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlayerRef, learnPlayerRef }) {
   const initialStorage = useMemo(() => loadStorage(puzzleConfig.id), [puzzleConfig]);
   const initialPracticePrefs = useMemo(() => loadPracticePrefs(), []);
@@ -102,6 +150,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   const [learnCase, setLearnCase] = useState(null);
   const [currentCase, setCurrentCase] = useState(null);
+  // The alg text the Practice panel's reveal display shows — currentCase's
+  // own alg with this attempt's preAuf/postAuf (random AUF; empty otherwise)
+  // folded in and merged, so what's shown is the actual sequence that solves
+  // the puzzle from its current scrambled state (see loadPracticeCase).
+  const [displayAlg, setDisplayAlg] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [lastSolveElapsed, setLastSolveElapsed] = useState(null);
 
@@ -327,6 +380,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       caseAufRef.current = { preAuf, postAuf };
       stopTimer();
 
+      setDisplayAlg(
+        mergeUMoves([preAuf, c.alg, postAuf].filter(Boolean).join(" "), U_TURN_ORDER[puzzleConfig.id]),
+      );
+
       // preAuf/postAuf (empty unless random AUF picked turns for this case)
       // fold onto the case's own alg before inverting, so the actual
       // sequence that needs solving is "preAuf + case alg + postAuf" — U is
@@ -367,7 +424,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
       syncPracticePlayer();
     },
-    [kpuzzle, solvedPattern, stopTimer, syncPracticePlayer],
+    [kpuzzle, solvedPattern, stopTimer, syncPracticePlayer, puzzleConfig],
   );
 
   // With no cases checked, there's nothing to scramble to or time — instead
@@ -377,6 +434,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const loadFreePlay = useCallback(() => {
     if (!solvedPattern) return;
     setCurrentCase(null);
+    setDisplayAlg("");
     setRevealed(false);
     setLastSolveElapsed(null);
     solveMovesRef.current = [];
@@ -540,7 +598,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const revealAlg = useCallback(() => {
     if (!currentCase) return;
     setRevealed(true);
-    showLearnCase(currentCase); // also load it into the reference panel so it can be watched
+    // displayAlg is currentCase's alg with this attempt's preAuf/postAuf
+    // (random AUF; empty otherwise) already folded in and merged (see
+    // loadPracticeCase) — reused here so the reference panel plays the same
+    // actual solve the Practice panel's own alg display shows, rather than
+    // just the bare case alg with an AUF left undone at the end.
+    const revealCase = currentCase.alg === displayAlg ? currentCase : { ...currentCase, alg: displayAlg };
+    showLearnCase(revealCase); // also load it into the reference panel so it can be watched
 
     // Reset the practice cube back to the scrambled state so the case can
     // still be practiced (now with the algorithm visible) instead of being
@@ -550,7 +614,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     // left untouched, so "Solved!" keeps showing until a new case is loaded.
     solveMovesRef.current = [];
     syncPracticePlayer();
-  }, [currentCase, showLearnCase, syncPracticePlayer]);
+  }, [currentCase, displayAlg, showLearnCase, syncPracticePlayer]);
 
   // With visible turning on, hand the whole alg to the player's native
   // playback (respecting tempoScale) for smooth turning. Otherwise fall
@@ -717,6 +781,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
     learnCase,
     currentCase,
+    displayAlg,
     revealed,
     lastSolveElapsed,
 

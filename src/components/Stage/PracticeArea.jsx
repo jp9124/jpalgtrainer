@@ -10,6 +10,7 @@ export default function PracticeArea() {
     statusLine,
     statusGood,
     currentCase,
+    displayAlg,
     revealed,
     loadNewPracticeCase,
     revealAlg,
@@ -36,7 +37,7 @@ export default function PracticeArea() {
     <div className={styles.practiceArea}>
       <div className={timerClass}>{timerLabel}</div>
       <div className={statusClass}>{statusLine}</div>
-      <div className={algClass}>{currentCase ? currentCase.alg : "? ? ? ? ?"}</div>
+      <div className={algClass}>{currentCase ? displayAlg : "? ? ? ? ?"}</div>
       <div className={styles.controlsRow}>
         <button className={styles.primary} onClick={loadNewPracticeCase}>
           New case (enter)

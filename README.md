@@ -129,7 +129,14 @@ collection of named algorithms actually verified against a public source, not an
   per method, matching the source. Parenthesized AUF prefixes (e.g. `(U2)`) are kept as real
   leading moves, just with the cosmetic parens stripped; the source's one `(U/U')` (either AUF
   works) took the first option. Every case was parsed and round-trip-verified against the real
-  `cubing` engine.
+  `cubing` engine. **TCLL+/TCLL-** (`src/puzzles/algs/tcll2x2.js`, 43 cases each, 86 total),
+  supplied by this project's user as `tcll.txt`. Each set is grouped by its 8 named shapes
+  (Hammer, Spaceship, Stollery, Pinwheel, Two-Face, Turtle, Pinwheel Poser, Gun), numbered
+  within the group (e.g. Hammer 1..Hammer 6); Pinwheel has only 3 cases and Two-Face only 4,
+  matching the source. The source gives multiple algorithms per shape — one per AUF/recognition
+  angle, not alternates for the same case — so every one became its own case here, not just the
+  first. Same AUF-paren-stripping convention as CLL above. Every case was parsed and
+  round-trip-verified against the real `cubing` engine.
 - **3x3** — **ZBLL** (`src/puzzles/algs/zbll.js`), split into 7 sets by edge shape (T/U/L/H/Pi/S/AS,
   472 cases total), supplied directly by this project's user from a personal ZBLL reference
   (a JS object originally named `zbll_juliette`). Where that source listed alternate algorithms
