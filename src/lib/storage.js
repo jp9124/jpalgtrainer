@@ -18,9 +18,16 @@ export function loadPracticePrefs() {
       visibleTurningEnabled: parsed?.visibleTurningEnabled ?? false,
       turnsPerSecond: parsed?.turnsPerSecond ?? 15,
       colorNeutralEnabled: parsed?.colorNeutralEnabled ?? false,
+      randomAufEnabled: parsed?.randomAufEnabled ?? false,
     };
   } catch {
-    return { orderedEnabled: true, visibleTurningEnabled: false, turnsPerSecond: 15, colorNeutralEnabled: false };
+    return {
+      orderedEnabled: true,
+      visibleTurningEnabled: false,
+      turnsPerSecond: 15,
+      colorNeutralEnabled: false,
+      randomAufEnabled: false,
+    };
   }
 }
 

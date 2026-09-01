@@ -45,6 +45,30 @@ function randomOrientationAlg(puzzleId) {
   }
 }
 
+// "Random AUF" (Adjust U-Face) practice: fold a random U-turn onto the front
+// and back of the case's own alg before computing the scramble, so the case
+// isn't always met (and left) at the same U alignment — same idea as real
+// AUF, just simulated instead of physically present. Unlike color-neutral,
+// this needs no orientation bookkeeping at all: U is an ordinary move here,
+// so folding extra U-turns into the setup/solve sequence is exactly as
+// valid as the case's alg by itself, and isSolved's existing pattern
+// comparison doesn't need to change to account for it.
+//
+// The order of U (how many distinct turns exist before it repeats back to
+// no-op) varies by puzzle — verified against the real engine, not assumed:
+// the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx/Skewb are
+// order 3 (their faces are triangular, no "double" turn), Megaminx is order
+// 5 (pentagonal faces). Square-1 has no U move at all (twist/slash only),
+// so it's simply absent from this map — random AUF isn't offered there.
+const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, pyraminx: 3, skewb: 3 };
+
+function randomAufAlg(puzzleId) {
+  const order = U_TURN_ORDER[puzzleId];
+  if (!order) return "";
+  const amount = Math.floor(Math.random() * order); // 0..order-1, "0" = no AUF this side
+  return Array(amount).fill("U").join(" ");
+}
+
 export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlayerRef, learnPlayerRef }) {
   const initialStorage = useMemo(() => loadStorage(puzzleConfig.id), [puzzleConfig]);
   const initialPracticePrefs = useMemo(() => loadPracticePrefs(), []);
@@ -90,6 +114,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(initialPracticePrefs.visibleTurningEnabled);
   const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
   const [colorNeutralEnabled, setColorNeutralEnabled] = useState(initialPracticePrefs.colorNeutralEnabled);
+  const [randomAufEnabled, setRandomAufEnabled] = useState(initialPracticePrefs.randomAufEnabled);
 
   // visibleTurningEnabled is a global preference (persisted independent of
   // puzzle, see loadPracticePrefs/savePracticePrefs), but Square-1's moves
@@ -106,6 +131,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // is a global preference, but only some puzzles have rotation moves this
   // feature can use (see randomOrientationAlg's source note).
   const colorNeutralActive = colorNeutralEnabled && COLOR_NEUTRAL_PUZZLE_IDS.includes(puzzleConfig.id);
+
+  // Same shape of override again: randomAufEnabled is global, but only
+  // puzzles with a U move (i.e. every one but Square-1) support it — see
+  // U_TURN_ORDER's source note.
+  const randomAufActive = randomAufEnabled && puzzleConfig.id in U_TURN_ORDER;
 
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
@@ -125,6 +155,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // separate from picking a new one so Reset Case can reload the exact same
   // case+orientation instead of re-rolling it.
   const caseRotationAlgRef = useRef("");
+  // The random AUF turns (possibly "") folded onto the front/back of the
+  // current case's alg, kept for the same reset-reuse reason as above.
+  const caseAufRef = useRef({ preAuf: "", postAuf: "" });
   const solveMovesRef = useRef([]);
   const lastCaseNameRef = useRef(null);
   const timerStartRef = useRef(0);
@@ -147,8 +180,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // when switching puzzles instead of resetting with the rest of this
   // puzzle-scoped state.
   useEffect(() => {
-    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled });
-  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled]);
+    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled });
+  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled]);
 
   // Sets an explicit list of case names to a given checked value in one
   // atomic update — used for toggling a single case, a whole group of
@@ -284,18 +317,25 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [activeSet, checkedCaseNames, orderedEnabled]);
 
   const loadPracticeCase = useCallback(
-    (c, rotationAlg = "") => {
+    (c, { rotationAlg = "", preAuf = "", postAuf = "" } = {}) => {
       if (!kpuzzle || !solvedPattern) return;
       setCurrentCase(c);
       setRevealed(false);
       setLastSolveElapsed(null);
       solveMovesRef.current = [];
       caseRotationAlgRef.current = rotationAlg;
+      caseAufRef.current = { preAuf, postAuf };
       stopTimer();
 
+      // preAuf/postAuf (empty unless random AUF picked turns for this case)
+      // fold onto the case's own alg before inverting, so the actual
+      // sequence that needs solving is "preAuf + case alg + postAuf" — U is
+      // an ordinary move here, so this needs no special solved-detection
+      // handling the way rotationAlg does.
       let setupAlg;
       try {
-        setupAlg = new Alg(c.alg).invert().toString();
+        const extendedAlg = [preAuf, c.alg, postAuf].filter(Boolean).join(" ");
+        setupAlg = new Alg(extendedAlg).invert().toString();
       } catch {
         setupAlg = "";
       }
@@ -330,6 +370,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setLastSolveElapsed(null);
     solveMovesRef.current = [];
     caseRotationAlgRef.current = "";
+    caseAufRef.current = { preAuf: "", postAuf: "" };
     stopTimer();
 
     scrambleAlgRef.current = "";
@@ -351,8 +392,12 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       return;
     }
     lastCaseNameRef.current = c.name;
-    loadPracticeCase(c, colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "");
-  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, puzzleConfig]);
+    loadPracticeCase(c, {
+      rotationAlg: colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "",
+      preAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+      postAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+    });
+  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, puzzleConfig]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -438,10 +483,16 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [syncPracticePlayer]);
 
   const resetCase = useCallback(() => {
-    // Reuses caseRotationAlgRef (not a fresh random pick) so a reset gives
-    // back the exact same case+orientation for another attempt.
-    if (currentCase) loadPracticeCase(currentCase, caseRotationAlgRef.current);
-    else loadFreePlay();
+    // Reuses caseRotationAlgRef/caseAufRef (not a fresh random pick) so a
+    // reset gives back the exact same case+orientation+AUF for another
+    // attempt.
+    if (currentCase) {
+      loadPracticeCase(currentCase, {
+        rotationAlg: caseRotationAlgRef.current,
+        preAuf: caseAufRef.current.preAuf,
+        postAuf: caseAufRef.current.postAuf,
+      });
+    } else loadFreePlay();
   }, [currentCase, loadPracticeCase, loadFreePlay]);
 
   // Reference-panel scrambling uses the same plain "set .alg, then
@@ -677,6 +728,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setTurnsPerSecond,
     colorNeutralEnabled,
     setColorNeutralEnabled,
+    randomAufEnabled,
+    setRandomAufEnabled,
 
     customSetText,
     setCustomSetText,

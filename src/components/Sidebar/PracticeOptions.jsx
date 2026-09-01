@@ -8,6 +8,11 @@ import styles from "./Sidebar.module.css";
 const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
 const COLOR_NEUTRAL_LIMITED = ["megaminx", "pyraminx"];
 
+// Every puzzle with a U move supports random AUF — everything except
+// Square-1, whose moves are twist/slash pairs with no discrete U turn at
+// all (see U_TURN_ORDER's source note in useTrainer.js).
+const RANDOM_AUF_UNSUPPORTED = ["square1"];
+
 export default function PracticeOptions() {
   const {
     orderedEnabled,
@@ -18,6 +23,8 @@ export default function PracticeOptions() {
     setTurnsPerSecond,
     colorNeutralEnabled,
     setColorNeutralEnabled,
+    randomAufEnabled,
+    setRandomAufEnabled,
     puzzleConfig,
   } = useTrainerContext();
 
@@ -32,6 +39,8 @@ export default function PracticeOptions() {
 
   const colorNeutralSupported = COLOR_NEUTRAL_SUPPORTED.includes(puzzleConfig.id);
   const colorNeutralLimited = COLOR_NEUTRAL_LIMITED.includes(puzzleConfig.id);
+
+  const randomAufSupported = !RANDOM_AUF_UNSUPPORTED.includes(puzzleConfig.id);
 
   return (
     <section>
@@ -58,6 +67,18 @@ export default function PracticeOptions() {
                 : "Scrambles from a randomly rotated starting orientation each case, instead of always the same color scheme"
             }
             onChange={(e) => setColorNeutralEnabled(e.target.checked)}
+          />
+        </div>
+      )}
+      {randomAufSupported && (
+        <div className={styles.toggleRow}>
+          <label htmlFor="randomAufToggle">Random AUF</label>
+          <input
+            id="randomAufToggle"
+            type="checkbox"
+            checked={randomAufEnabled}
+            title="Adds a random U turn before and after each case's algorithm, so you're not always solving from the same U alignment"
+            onChange={(e) => setRandomAufEnabled(e.target.checked)}
           />
         </div>
       )}
