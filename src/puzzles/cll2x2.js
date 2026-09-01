@@ -215,7 +215,7 @@ export const cll2x2Sets = [
       {
         "name": "S1",
         "group": "S",
-        "alg": "U' F' L U2 F2 R U'"
+        "alg": "U' F' L U2 F2 R U' x'"
       },
       {
         "name": "S2",

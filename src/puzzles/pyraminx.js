@@ -1,3 +1,6 @@
+import ml4eRightSet from "./pyraminx-ml4e-right";
+import ml4eLeftSet from "./pyraminx-ml4e-left";
+
 // No official cubing.js keyboard layout exists for Pyraminx, so this reuses
 // the same physical key positions as FTO/Megaminx for the matching face
 // letters (U, L, R, B), for muscle-memory consistency across puzzles in
@@ -80,6 +83,8 @@ const builtinSets = [
       { name: "Double Ugly", alg: "L' U L U L' U' L", group: "No Bar" },
     ],
   },
+  ml4eRightSet,
+  ml4eLeftSet,
 ];
 
 export default {
