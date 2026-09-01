@@ -24,7 +24,7 @@
 //   here — they're equally valid, so any one is a fine training target.
 const lbtCases = [
   { name: "Case 1", alg: "BL R' L' R L BL'", group: "Group 1: one solved, one on top", note: "Keyhole from top" },
-  { name: "Case 2", alg: "Uv' BR' L R L' R' BR", group: "Group 1: one solved, one on top", note: "Keyhole from top" },
+  { name: "Case 2", alg: "Uv' BR' L R L' R' BR Uv", group: "Group 1: one solved, one on top", note: "Keyhole from top" },
   { name: "Case 3", alg: "F R' L R L' R B' R' B F'", group: "Group 1: one solved, one on top", note: "Join corner with tri on top, 2-flip, return" },
   { name: "Case 4", alg: "BL' R B' R' B R' L R L' BL", group: "Group 1: one solved, one on top", note: "Join corner with tri on top, 2-flip, return" },
   { name: "Case 5", alg: "u' BL L' R' L R BL'", group: "Group 2: one solved, one in middle", note: "Keyhole from middle" },
