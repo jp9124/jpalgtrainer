@@ -23,8 +23,12 @@ const controls = [
   { label: "B'", move: "B'", code: "KeyO", keyLabel: "O" },
   { label: "FR", move: "FR", code: "KeyS", keyLabel: "S" },
   { label: "FR'", move: "FR'", code: "KeyL", keyLabel: "L" },
-  { label: "y", move: "y", code: "KeyA", keyLabel: "A" },
-  { label: "y'", move: "y'", code: "Semicolon", keyLabel: ";" },
+  // Swapped relative to the literal cubing.js token: on this puzzle "y"
+  // rotated the opposite way a solver would expect from every other puzzle
+  // in this app, so the label now maps to the other token to match (same
+  // fix already applied to Pyraminx).
+  { label: "y", move: "y'", code: "KeyA", keyLabel: "A" },
+  { label: "y'", move: "y", code: "Semicolon", keyLabel: ";" },
   { label: "bR", move: "bR", code: "KeyB", keyLabel: "B" },
   { label: "bR'", move: "bR'", code: "KeyC", keyLabel: "C" },
   { label: "dR", move: "dR", code: "KeyN", keyLabel: "N" },
