@@ -7,6 +7,44 @@ function emptyCustomSet() {
   return { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases: [] };
 }
 
+// "Color neutral" practice: rotate the whole puzzle to a random orientation
+// before scrambling into a case, so cases aren't always studied from the
+// same fixed color scheme. Built only from rotation tokens verified against
+// the real `cubing` engine (see the research behind this feature) — cube
+// puzzles get the standard 24-way x/y/z rotation group, but megaminx's
+// kpuzzle only accepts x2/y/y'/y2 (10 reachable orientations, not the full
+// 60 — no other axis is exposed; "Could not split X/Z into face names" for
+// anything else) and pyraminx only accepts y/y'/y2 (3 orientations, all
+// sharing the same "up" vertex; "Bad move x"/"Bad move z" otherwise). Not
+// true full color neutrality for those two, just the rotation variety the
+// engine actually exposes.
+const CUBE_UP_SETUPS = ["", "x", "x2", "x'", "z", "z'"];
+const CUBE_SPINS = ["", "y", "y2", "y'"];
+const MEGAMINX_UP_SETUPS = ["", "x2"];
+const MEGAMINX_SPINS = ["", "y", "y2", "y2 y", "y'"];
+const PYRAMINX_SPINS = ["", "y", "y2"];
+
+const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
+
+function pick(options) {
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function randomOrientationAlg(puzzleId) {
+  switch (puzzleId) {
+    case "2x2x2":
+    case "3x3x3":
+    case "5x5x5":
+      return [pick(CUBE_UP_SETUPS), pick(CUBE_SPINS)].filter(Boolean).join(" ");
+    case "megaminx":
+      return [pick(MEGAMINX_UP_SETUPS), pick(MEGAMINX_SPINS)].filter(Boolean).join(" ");
+    case "pyraminx":
+      return pick(PYRAMINX_SPINS);
+    default:
+      return "";
+  }
+}
+
 export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlayerRef, learnPlayerRef }) {
   const initialStorage = useMemo(() => loadStorage(puzzleConfig.id), [puzzleConfig]);
   const initialPracticePrefs = useMemo(() => loadPracticePrefs(), []);
@@ -51,6 +89,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [orderedEnabled, setOrderedEnabled] = useState(initialPracticePrefs.orderedEnabled);
   const [visibleTurningEnabled, setVisibleTurningEnabled] = useState(initialPracticePrefs.visibleTurningEnabled);
   const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
+  const [colorNeutralEnabled, setColorNeutralEnabled] = useState(initialPracticePrefs.colorNeutralEnabled);
 
   // visibleTurningEnabled is a global preference (persisted independent of
   // puzzle, see loadPracticePrefs/savePracticePrefs), but Square-1's moves
@@ -63,6 +102,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // override instead.
   const visibleTurningActive = visibleTurningEnabled && puzzleConfig.id !== "square1";
 
+  // Same shape of override as visibleTurningActive above: colorNeutralEnabled
+  // is a global preference, but only some puzzles have rotation moves this
+  // feature can use (see randomOrientationAlg's source note).
+  const colorNeutralActive = colorNeutralEnabled && COLOR_NEUTRAL_PUZZLE_IDS.includes(puzzleConfig.id);
+
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
   const [customSetText, setCustomSetText] = useState(() => initialStorage.customSetText);
@@ -73,6 +117,14 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // Imperative-only bookkeeping that doesn't need to trigger re-renders.
   const scrambleAlgRef = useRef("");
   const scrambledPatternRef = useRef(null);
+  // The pattern a case's moves must reach to count as solved — normally
+  // just solvedPattern, but a rotated pattern when color-neutral picked an
+  // orientation for the current case (see loadPracticeCase/isSolved).
+  const targetPatternRef = useRef(null);
+  // The orientation alg (possibly "") applied to the current case, kept
+  // separate from picking a new one so Reset Case can reload the exact same
+  // case+orientation instead of re-rolling it.
+  const caseRotationAlgRef = useRef("");
   const solveMovesRef = useRef([]);
   const lastCaseNameRef = useRef(null);
   const timerStartRef = useRef(0);
@@ -95,8 +147,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // when switching puzzles instead of resetting with the rest of this
   // puzzle-scoped state.
   useEffect(() => {
-    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond });
-  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond]);
+    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled });
+  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled]);
 
   // Sets an explicit list of case names to a given checked value in one
   // atomic update — used for toggling a single case, a whole group of
@@ -198,13 +250,17 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // but it only works for plain NxNxN cubes (2x2x2/3x3x3/5x5x5) — verified
   // it throws "not supported" for FTO/Megaminx/Pyraminx/Skewb/Square-1, none
   // of which expose the rotation moves needed to build an equivalent
-  // ourselves, so those puzzles keep the exact-orientation check.
+  // ourselves, so those puzzles keep the exact-orientation check — but
+  // against targetPatternRef (normally solvedPattern, but a specific rotated
+  // pattern when color-neutral picked an orientation for this case) rather
+  // than solvedPattern directly, so a color-neutral case correctly reads as
+  // solved once it's back to ITS rotated target, not the canonical one.
   const isSolved = useCallback(
     (pattern) => {
       if (typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
         return pattern.experimentalIsSolved({ ignorePuzzleOrientation: true, ignoreCenterOrientation: false });
       }
-      return pattern.isIdentical(solvedPattern);
+      return pattern.isIdentical(targetPatternRef.current ?? solvedPattern);
     },
     [kpuzzle, solvedPattern],
   );
@@ -228,12 +284,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [activeSet, checkedCaseNames, orderedEnabled]);
 
   const loadPracticeCase = useCallback(
-    (c) => {
+    (c, rotationAlg = "") => {
       if (!kpuzzle || !solvedPattern) return;
       setCurrentCase(c);
       setRevealed(false);
       setLastSolveElapsed(null);
       solveMovesRef.current = [];
+      caseRotationAlgRef.current = rotationAlg;
       stopTimer();
 
       let setupAlg;
@@ -242,8 +299,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       } catch {
         setupAlg = "";
       }
-      scrambleAlgRef.current = setupAlg;
-      scrambledPatternRef.current = solvedPattern.applyAlg(setupAlg);
+      // rotationAlg (empty unless color-neutral picked an orientation for
+      // this case) goes first: rotate the solved reference, then scramble
+      // relative to THAT — so the case's alg text and solved-check both
+      // stay correct without needing to touch c.alg at all (see
+      // randomOrientationAlg's source note for why this works).
+      const fullSetupAlg = [rotationAlg, setupAlg].filter(Boolean).join(" ");
+      scrambleAlgRef.current = fullSetupAlg;
+      scrambledPatternRef.current = solvedPattern.applyAlg(fullSetupAlg);
+      targetPatternRef.current = rotationAlg ? solvedPattern.applyAlg(rotationAlg) : solvedPattern;
 
       setTimerLabel("0.00");
       setTimerStatus("idle");
@@ -265,10 +329,12 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setRevealed(false);
     setLastSolveElapsed(null);
     solveMovesRef.current = [];
+    caseRotationAlgRef.current = "";
     stopTimer();
 
     scrambleAlgRef.current = "";
     scrambledPatternRef.current = solvedPattern;
+    targetPatternRef.current = solvedPattern;
 
     setTimerLabel("0.00");
     setTimerStatus("idle");
@@ -285,8 +351,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       return;
     }
     lastCaseNameRef.current = c.name;
-    loadPracticeCase(c);
-  }, [pickNextCase, loadPracticeCase, loadFreePlay]);
+    loadPracticeCase(c, colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "");
+  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, puzzleConfig]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -372,7 +438,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [syncPracticePlayer]);
 
   const resetCase = useCallback(() => {
-    if (currentCase) loadPracticeCase(currentCase);
+    // Reuses caseRotationAlgRef (not a fresh random pick) so a reset gives
+    // back the exact same case+orientation for another attempt.
+    if (currentCase) loadPracticeCase(currentCase, caseRotationAlgRef.current);
     else loadFreePlay();
   }, [currentCase, loadPracticeCase, loadFreePlay]);
 
@@ -607,6 +675,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setVisibleTurningEnabled,
     turnsPerSecond,
     setTurnsPerSecond,
+    colorNeutralEnabled,
+    setColorNeutralEnabled,
 
     customSetText,
     setCustomSetText,

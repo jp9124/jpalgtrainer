@@ -1,6 +1,13 @@
 import { useTrainerContext } from "../../context/TrainerContext.jsx";
 import styles from "./Sidebar.module.css";
 
+// Puzzles color-neutral mode actually works on — it needs whole-puzzle
+// rotation moves that only these five expose (see randomOrientationAlg's
+// source note in useTrainer.js); it's simply hidden everywhere else rather
+// than shown disabled, since it doesn't apply there at all.
+const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
+const COLOR_NEUTRAL_LIMITED = ["megaminx", "pyraminx"];
+
 export default function PracticeOptions() {
   const {
     orderedEnabled,
@@ -9,6 +16,8 @@ export default function PracticeOptions() {
     setVisibleTurningEnabled,
     turnsPerSecond,
     setTurnsPerSecond,
+    colorNeutralEnabled,
+    setColorNeutralEnabled,
     puzzleConfig,
   } = useTrainerContext();
 
@@ -20,6 +29,9 @@ export default function PracticeOptions() {
   // puzzle) — only its effect here is suppressed.
   const visibleTurningUnsupported = puzzleConfig.id === "square1";
   const visibleTurningActive = visibleTurningEnabled && !visibleTurningUnsupported;
+
+  const colorNeutralSupported = COLOR_NEUTRAL_SUPPORTED.includes(puzzleConfig.id);
+  const colorNeutralLimited = COLOR_NEUTRAL_LIMITED.includes(puzzleConfig.id);
 
   return (
     <section>
@@ -33,6 +45,22 @@ export default function PracticeOptions() {
           onChange={(e) => setOrderedEnabled(e.target.checked)}
         />
       </div>
+      {colorNeutralSupported && (
+        <div className={styles.toggleRow}>
+          <label htmlFor="colorNeutralToggle">Color neutral</label>
+          <input
+            id="colorNeutralToggle"
+            type="checkbox"
+            checked={colorNeutralEnabled}
+            title={
+              colorNeutralLimited
+                ? "Scrambles from a randomly rotated starting orientation each case (this puzzle's move set only reaches a handful of orientations, not the full set)"
+                : "Scrambles from a randomly rotated starting orientation each case, instead of always the same color scheme"
+            }
+            onChange={(e) => setColorNeutralEnabled(e.target.checked)}
+          />
+        </div>
+      )}
       <div className={styles.toggleRow}>
         <label htmlFor="visibleTurningToggle">
           Visible turning

@@ -17,9 +17,10 @@ export function loadPracticePrefs() {
       orderedEnabled: parsed?.orderedEnabled ?? true,
       visibleTurningEnabled: parsed?.visibleTurningEnabled ?? false,
       turnsPerSecond: parsed?.turnsPerSecond ?? 15,
+      colorNeutralEnabled: parsed?.colorNeutralEnabled ?? false,
     };
   } catch {
-    return { orderedEnabled: true, visibleTurningEnabled: false, turnsPerSecond: 15 };
+    return { orderedEnabled: true, visibleTurningEnabled: false, turnsPerSecond: 15, colorNeutralEnabled: false };
   }
 }
 
