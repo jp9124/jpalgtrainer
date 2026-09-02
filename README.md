@@ -5,8 +5,7 @@
 A React algorithm trainer for twisty puzzles, modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Started with FTO
 (Face-Turning Octahedron); now also covers Megaminx, Pyraminx, Skewb, and
-Square-1. The original zero-build single-file FTO-only version is kept in
-[`vanilla/`](vanilla/) for reference.
+Square-1.
 
 ## Running it
 

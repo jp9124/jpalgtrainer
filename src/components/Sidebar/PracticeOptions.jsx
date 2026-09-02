@@ -28,15 +28,6 @@ export default function PracticeOptions() {
     puzzleConfig,
   } = useTrainerContext();
 
-  // Square-1's moves aren't plain quantum turns (they're twist/slash
-  // groupings), and cubing's experimentalAddMove — what visible turning
-  // relies on to animate — doesn't handle them correctly, breaking the
-  // puzzle's turning (see the matching override in useTrainer.js). The
-  // preference itself stays untouched (it's global, shared with every other
-  // puzzle) — only its effect here is suppressed.
-  const visibleTurningUnsupported = puzzleConfig.id === "square1";
-  const visibleTurningActive = visibleTurningEnabled && !visibleTurningUnsupported;
-
   const colorNeutralSupported = COLOR_NEUTRAL_SUPPORTED.includes(puzzleConfig.id);
   const colorNeutralLimited = COLOR_NEUTRAL_LIMITED.includes(puzzleConfig.id);
 
@@ -83,20 +74,15 @@ export default function PracticeOptions() {
         </div>
       )}
       <div className={styles.toggleRow}>
-        <label htmlFor="visibleTurningToggle">
-          Visible turning
-          {visibleTurningUnsupported && " (unsupported on Square-1)"}
-        </label>
+        <label htmlFor="visibleTurningToggle">Visible turning</label>
         <input
           id="visibleTurningToggle"
           type="checkbox"
-          checked={visibleTurningActive}
-          disabled={visibleTurningUnsupported}
-          title={visibleTurningUnsupported ? "Square-1's moves break the visible-turning animation" : undefined}
+          checked={visibleTurningEnabled}
           onChange={(e) => setVisibleTurningEnabled(e.target.checked)}
         />
       </div>
-      {visibleTurningActive && (
+      {visibleTurningEnabled && (
         <div className={styles.toggleRow}>
           <label htmlFor="turnsPerSecondInput">Turn speed (turns/sec)</label>
           <input

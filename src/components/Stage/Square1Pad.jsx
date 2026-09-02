@@ -18,11 +18,24 @@ function twistButtons(controls, re) {
   return [...keysByAmount.entries()].sort(([a], [b]) => a - b);
 }
 
+// Same idea as twistButtons, for the x2/y2/z2 whole-puzzle rotations —
+// derived so a control change stays reflected here automatically.
+function rotationButtons(controls, moves) {
+  const keysByMove = new Map();
+  for (const c of controls) {
+    if (!moves.includes(c.move)) continue;
+    if (!keysByMove.has(c.move)) keysByMove.set(c.move, []);
+    keysByMove.get(c.move).push(c.keyLabel);
+  }
+  return moves.filter((m) => keysByMove.has(m)).map((m) => [m, keysByMove.get(m)]);
+}
+
 export default function Square1Pad() {
   const { applyMove, puzzleConfig } = useTrainerContext();
   const topButtons = twistButtons(puzzleConfig.controls, /^\((-?\d+),0\)$/);
   const bottomButtons = twistButtons(puzzleConfig.controls, /^\(0,(-?\d+)\)$/);
   const slashKeys = puzzleConfig.controls.filter((c) => c.move === "/").map((c) => c.keyLabel);
+  const rotations = rotationButtons(puzzleConfig.controls, ["x2", "y2", "z2"]);
 
   return (
     <div className={styles.square1Pad}>
@@ -49,6 +62,17 @@ export default function Square1Pad() {
           <span className={styles.moveLabel}>/ (slash)</span>
           <span className={styles.key}>{slashKeys.join("/")}</span>
         </button>
+      )}
+      {rotations.length > 0 && (
+        <div className={styles.row}>
+          <span className={styles.rowLabel}>Rotate</span>
+          {rotations.map(([move, keys]) => (
+            <button key={move} onClick={() => applyMove(move)}>
+              <span className={styles.moveLabel}>{move}</span>
+              <span className={styles.key}>{keys.join("/")}</span>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );

@@ -62,6 +62,13 @@ function randomOrientationAlg(puzzleId) {
 // so it's simply absent from this map — random AUF isn't offered there.
 const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, pyraminx: 3, skewb: 3 };
 
+// Square-1's x2/y2/z2 whole-puzzle rotations (see square1.js's controls):
+// real, animated moves on its canvas renderer, but not real cubing.js
+// moves — its KPuzzle has no rotation support at all (verified against the
+// engine, not assumed). applyMove below skips kpuzzle validation for
+// exactly these tokens instead of treating them as puzzle-agnostic.
+const SQUARE1_VIEW_ROTATIONS = new Set(["x2", "y2", "z2"]);
+
 function randomAufAlg(puzzleId) {
   const order = U_TURN_ORDER[puzzleId];
   if (!order) return "";
@@ -169,20 +176,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [colorNeutralEnabled, setColorNeutralEnabled] = useState(initialPracticePrefs.colorNeutralEnabled);
   const [randomAufEnabled, setRandomAufEnabled] = useState(initialPracticePrefs.randomAufEnabled);
 
-  // visibleTurningEnabled is a global preference (persisted independent of
-  // puzzle, see loadPracticePrefs/savePracticePrefs), but Square-1's moves
-  // aren't plain quantum turns (they're twist/slash groupings) and cubing's
-  // experimentalAddMove — the animation path visible turning relies on —
-  // doesn't handle them correctly, breaking the puzzle's turning. Rather
-  // than clobber the user's global preference when they're on Square-1
-  // (which would also silently turn it back on for other puzzles later),
-  // every place that acts on visibleTurningEnabled uses this puzzle-aware
-  // override instead.
-  const visibleTurningActive = visibleTurningEnabled && puzzleConfig.id !== "square1";
-
-  // Same shape of override as visibleTurningActive above: colorNeutralEnabled
-  // is a global preference, but only some puzzles have rotation moves this
-  // feature can use (see randomOrientationAlg's source note).
+  // colorNeutralEnabled is a global preference (persisted independent of
+  // puzzle, see loadPracticePrefs/savePracticePrefs), but only some puzzles
+  // have rotation moves this feature can use (see randomOrientationAlg's
+  // source note). Rather than clobber the user's global preference when
+  // they're on an unsupported puzzle (which would also silently turn it
+  // back on for other puzzles later), every place that acts on it uses this
+  // puzzle-aware override instead.
   const colorNeutralActive = colorNeutralEnabled && COLOR_NEUTRAL_PUZZLE_IDS.includes(puzzleConfig.id);
 
   // Same shape of override again: randomAufEnabled is global, but only
@@ -314,13 +314,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     (move) => {
       const player = practicePlayerRef.current;
       if (!player) return;
-      if (visibleTurningActive) {
+      if (visibleTurningEnabled) {
         player.experimentalAddMove(move);
       } else {
         syncPracticePlayer();
       }
     },
-    [practicePlayerRef, visibleTurningActive, syncPracticePlayer],
+    [practicePlayerRef, visibleTurningEnabled, syncPracticePlayer],
   );
 
   const currentPattern = useCallback(() => {
@@ -516,19 +516,28 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // reset) shouldn't restart the timer or disturb the "Solved!" status.
       if (currentCase && timerStatus === "idle") startTimer();
 
-      try {
-        // applyAlg (not applyMove) so compound tokens like Square-1's
-        // "(3,0)" work the same way single face turns do.
-        scrambledPatternRef.current.applyAlg(move);
-      } catch {
-        setStatusLine(`Invalid move: ${move}`);
-        return;
+      // Square-1's x2/y2/z2 are a pure reorientation of the canvas, not a
+      // real move — skip kpuzzle validation/mutation and the solved check
+      // (which would just re-evaluate the same untouched pattern) but still
+      // animate and record them like any other move (see
+      // SQUARE1_VIEW_ROTATIONS's source note).
+      const isViewRotation = puzzleConfig.id === "square1" && SQUARE1_VIEW_ROTATIONS.has(move);
+
+      if (!isViewRotation) {
+        try {
+          // applyAlg (not applyMove) so compound tokens like Square-1's
+          // "(3,0)" work the same way single face turns do.
+          scrambledPatternRef.current.applyAlg(move);
+        } catch {
+          setStatusLine(`Invalid move: ${move}`);
+          return;
+        }
       }
 
       solveMovesRef.current = [...solveMovesRef.current, move];
       animateMoveOnPracticePlayer(move);
 
-      if (currentCase && timerStatus !== "solved" && isSolved(currentPattern())) {
+      if (!isViewRotation && currentCase && timerStatus !== "solved" && isSolved(currentPattern())) {
         onSolved();
       }
     },
@@ -539,6 +548,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       isSolved,
       startTimer,
       animateMoveOnPracticePlayer,
+      puzzleConfig,
       currentPattern,
       solvedPattern,
       onSolved,
@@ -625,7 +635,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
 
-    if (visibleTurningActive) {
+    if (visibleTurningEnabled) {
       player.alg = `${scrambleAlg} ${learnCase.alg}`;
       player.jumpToStart();
       player.play();
@@ -644,7 +654,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         player.jumpToEnd();
       }, (i + 1) * 400);
     });
-  }, [learnPlayerRef, learnCase, visibleTurningActive]);
+  }, [learnPlayerRef, learnCase, visibleTurningEnabled]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);

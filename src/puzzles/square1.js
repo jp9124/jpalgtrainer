@@ -7,11 +7,19 @@ import eoSet from "./algs/square1EO";
 // pad, but the keyboard shortcuts below still work the same way as any other
 // puzzle's (useTrainer's keydown handler reads `controls` regardless of
 // controlsType) — this project's user's own layout, not from any official
-// source. Whole-puzzle rotations (x2/y2/z2) are deliberately not bound to
-// anything: verified directly against the real engine that this puzzle's
+// source.
+//
+// x2/y2/z2 (whole-puzzle 180° rotations — the only rotation amount that's
+// always well-defined regardless of the puzzle's current, possibly
+// non-cubic, shape) use the same T/N, ;/A, P/Q keys as the original
+// standalone canvas page this puzzle's renderer (square1Renderer.js) was
+// built from. They're real, animated moves on that canvas, but NOT real
+// cubing.js moves: verified directly against the engine that this puzzle's
 // kpuzzle definition only has moves for the two twists and the slash — "y2"
-// etc. throw "Invalid move for KPuzzle (Square-1)" — so there's no rotation
-// move a key could trigger.
+// etc. throw "Invalid move for KPuzzle (Square-1)". useTrainer.js's
+// applyMove special-cases exactly these three tokens to skip kpuzzle
+// validation (a pure reorientation can't affect solved-detection anyway)
+// while still animating and recording them like any other move.
 const controls = [
   { label: "/", move: "/", code: "KeyI", keyLabel: "I" },
   { label: "/", move: "/", code: "KeyK", keyLabel: "K" },
@@ -23,6 +31,12 @@ const controls = [
   { label: "(0,-1)", move: "(0,-1)", code: "KeyL", keyLabel: "L" },
   { label: "(0,3)", move: "(0,3)", code: "KeyW", keyLabel: "W" },
   { label: "(0,-3)", move: "(0,-3)", code: "KeyO", keyLabel: "O" },
+  { label: "x2", move: "x2", code: "KeyT", keyLabel: "T" },
+  { label: "x2", move: "x2", code: "KeyN", keyLabel: "N" },
+  { label: "y2", move: "y2", code: "Semicolon", keyLabel: ";" },
+  { label: "y2", move: "y2", code: "KeyA", keyLabel: "A" },
+  { label: "z2", move: "z2", code: "KeyP", keyLabel: "P" },
+  { label: "z2", move: "z2", code: "KeyQ", keyLabel: "Q" },
 ];
 
 // Real Square-1 algorithms are dense numeric sequences, and most sources

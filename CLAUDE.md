@@ -7,10 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A React algorithm trainer for twisty puzzles (FTO, Megaminx, Pyraminx, Skewb, Square-1), modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Puzzle rendering and move/state logic come
 from the `cubing` npm package (the engine behind alpha.twizzle.net) — an internet connection is required
-to run it, since `cubing` fetches puzzle definitions at runtime.
-
-The original zero-build, single-file, FTO-only version is kept in `vanilla/` for reference only — do not
-extend it; all active development happens under `src/`.
+to run it, since `cubing` fetches puzzle definitions at runtime. The one exception is Square-1: cubing.js
+has no 3D support for its shape changes, so it renders through a from-scratch canvas engine instead (see
+`src/lib/square1Renderer.js`) — move validity and solved-detection still come from cubing.js's real
+Square-1 KPuzzle, only the rendering is custom.
 
 ## Commands
 
@@ -51,6 +51,13 @@ which proved unreliable once embedded in this app — see the comment above `lea
 
 Move validity and solved-state are never inferred from the 3D player; they're always checked against the
 `kpuzzle`/`solvedPattern` engine from `usePuzzleEngine`.
+
+Square-1 is the one exception to `<twisty-player>`: `Square1Canvas.jsx` (backed by
+`src/lib/square1Renderer.js`) renders it instead, exposing the same subset of the twisty-player API
+(`alg`, `jumpToStart`/`jumpToEnd`/`play`, `tempoScale`, `experimentalAddMove`) so `useTrainer.js` doesn't
+need puzzle-specific branches for most of this mechanism. It does need one: Square-1's x2/y2/z2
+whole-puzzle rotations animate on that canvas but aren't real cubing.js moves (its KPuzzle has no rotation
+support at all), so `applyMove` special-cases exactly those three tokens to skip kpuzzle validation.
 
 ### Puzzle configs (`src/puzzles/`)
 
