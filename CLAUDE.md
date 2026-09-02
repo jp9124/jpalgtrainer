@@ -66,7 +66,7 @@ list it there.
 - `builtinSets` are named algorithm collections (`{ id, name, source, cases: [{ name, alg }] }`), each
   verified against a specific public source rather than invented — see README.md's "About the built-in
   algorithms" section for what's used per puzzle and why Square-1 intentionally ships with none. The
-  collections themselves live in `src/puzzles/algs/` (e.g. `algs/zbll.js`, `algs/megaminxOll.js`), one
+  collections themselves live in `src/puzzles/algs/` (e.g. `algs/cube3x3Zbll.js`, `algs/megaminxOll.js`), one
   file per source, imported into the owning puzzle config — kept separate so a puzzle's config file
   stays about controls/metadata, not thousands of lines of case data.
 - The "Custom Set" the user pastes into the sidebar is validated live against the active puzzle's real

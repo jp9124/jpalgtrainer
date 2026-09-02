@@ -1,3 +1,5 @@
+import beginnerBasicsSet from "./algs/skewbBeginnerBasics";
+
 // No official cubing.js keyboard layout exists for Skewb either, so this
 // reuses the same physical key positions as FTO/Megaminx/Pyraminx for the
 // matching face letters (U, L, R, B, F), plus a y/y' whole-puzzle rotation
@@ -22,20 +24,7 @@ const controls = [
   { label: "y'", move: "y", code: "Semicolon", keyLabel: ";" },
 ];
 
-// Sourced from Sarah's Cubing Site — "Speedskewbin" beginner-method guide
-// (sarah.cubing.net/skewb/skewb-guide.pdf), read directly from the PDF.
-const builtinSets = [
-  {
-    id: "beginner-basics",
-    name: "Beginner Basics",
-    source: "Sarah's Cubing Site — Speedskewbin guide",
-    cases: [
-      { name: "Sledgehammer", alg: "F' L F L'" },
-      { name: "Hedgeslammer", alg: "L F' L' F" },
-      { name: "Corner Fix", alg: "L F' L' R' F R" },
-    ],
-  },
-];
+const builtinSets = [beginnerBasicsSet];
 
 export default {
   id: "skewb",

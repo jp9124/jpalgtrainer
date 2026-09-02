@@ -403,7 +403,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // it's prepended to the scramble as-is, and folded into what counts
       // as "solved" too, since solving the case's alg from there lands back
       // on c.setupAlg's state, not on the puzzle's true solved state (see
-      // the source note in fto-1lp.js for why the case data is shaped like
+      // the source note in fto1lp.js for why the case data is shaped like
       // this).
       //
       // rotationAlg (empty unless color-neutral picked an orientation for

@@ -1,7 +1,7 @@
 // ML4E (Right Slot) — "The Pyraminx Sheet - ML4E" (L4E method variant where
 // each case has two algorithm choices depending on which of the two
 // remaining un-placed edges you route into a slot on your right vs your
-// left). This file holds the Right Slot column; pyraminx-ml4e-left.js holds
+// left). This file holds the Right Slot column; pyraminxMl4eLeft.js holds
 // the Left Slot column for the exact same case list. Same S/H trigger
 // convention as the base L4E set (S = R' L R L', H = L R' L' R), inlined
 // into plain face turns below since the alg engine has no concept of named

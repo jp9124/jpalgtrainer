@@ -1,5 +1,5 @@
 // ML4E (Left Slot) — the Left Slot column counterpart to
-// pyraminx-ml4e-right.js. See that file's header comment for the shared
+// pyraminxMl4eRight.js. See that file's header comment for the shared
 // source, trigger-expansion, blank-cell derivation, and coverage notes —
 // everything there applies here too, just for the other column.
 const cases = [

@@ -1,6 +1,6 @@
 import { cube2x2Controls } from "./cubeControls";
-import { cll2x2Sets } from "./algs/cll2x2";
-import { tcll2x2Sets } from "./algs/tcll2x2";
+import { cll2x2Sets } from "./algs/cube2x2Cll";
+import { tcll2x2Sets } from "./algs/cube2x2Tcll";
 
 export default {
   id: "2x2x2",

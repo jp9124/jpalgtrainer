@@ -1,14 +1,14 @@
 // TCLL (Twisted Corners Last Layer) — two sibling sets, TCLL+ and TCLL-,
 // each grouped by 8 named shapes (Hammer, Spaceship, Stollery, Pinwheel,
 // Two-Face, Turtle, Pinwheel Poser, Gun), numbered within the group the same
-// way cll2x2.js numbers its shapes (e.g. Hammer 1..Hammer 6). Pinwheel has
+// way cube2x2Cll.js numbers its shapes (e.g. Hammer 1..Hammer 6). Pinwheel has
 // only 3 cases and Two-Face only 4, matching the source — it lists no more
 // for those shapes. Supplied by this project's user as "tcll.txt", which
 // gives multiple algorithms per named shape (one per AUF/recognition angle,
 // not alternates for the same case) — every one is a distinct case here,
 // not just the first. Parenthesized AUF prefixes (e.g. "(U2)") are kept as
 // real leading moves with the cosmetic parens stripped; the one "(U/U')"
-// (either AUF works) took the first option, same convention as cll2x2.js.
+// (either AUF works) took the first option, same convention as cube2x2Cll.js.
 // Every algorithm was parsed and round-trip-verified against the real
 // `cubing` 2x2x2 engine, with no duplicate patterns within either set.
 export const tcll2x2Sets = [

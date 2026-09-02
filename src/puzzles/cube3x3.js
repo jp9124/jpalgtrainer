@@ -1,5 +1,5 @@
 import { cubeControls, cubeKeyAliases } from "./cubeControls";
-import { zbllSets } from "./algs/zbll";
+import { zbllSets } from "./algs/cube3x3Zbll";
 
 export default {
   id: "3x3x3",

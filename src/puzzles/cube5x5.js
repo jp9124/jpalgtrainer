@@ -1,5 +1,5 @@
 import { cubeControls, cubeKeyAliases } from "./cubeControls";
-import { l2eSets } from "./algs/l2e";
+import { l2eSets } from "./algs/cube5x5L2e";
 
 export default {
   id: "5x5x5",
