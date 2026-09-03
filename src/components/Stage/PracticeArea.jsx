@@ -44,13 +44,13 @@ export default function PracticeArea() {
         </button>
         <button onClick={revealAlg}>Reveal (space)</button>
         <button onClick={undoMove}>Undo move</button>
-        <button onClick={resetCase}>Reset case</button>
+        <button onClick={resetCase}>Reset case (esc)</button>
       </div>
       {puzzleConfig.controlsType === "square1" ? <Square1Pad /> : <MovePad />}
       <div className={styles.legend}>
         {puzzleConfig.controlsType === "square1"
-          ? "Click a twist amount for the top and/or bottom layer, then slash to swap, or use the matching keyboard key shown under each button. Space reveals the algorithm, Enter loads a new case."
-          : "Click a face, or use the matching keyboard key shown under each button. Space reveals the algorithm, Enter loads a new case."}
+          ? "Click a twist amount for the top and/or bottom layer, then slash to swap, or use the matching keyboard key shown under each button. Space reveals the algorithm, Enter loads a new case, Escape resets it."
+          : "Click a face, or use the matching keyboard key shown under each button. Space reveals the algorithm, Enter loads a new case, Escape resets it."}
       </div>
     </div>
   );

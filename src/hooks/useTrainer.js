@@ -745,9 +745,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpuzzle]);
 
-  // Keyboard controls, plus space to reveal the algorithm and enter to load
-  // a new case. Always active (the practice puzzle is always on screen),
-  // except while typing in a form field.
+  // Keyboard controls, plus space to reveal the algorithm, enter to load a
+  // new case, and escape to reset the current one. Always active (the
+  // practice puzzle is always on screen), except while typing in a form
+  // field.
   useEffect(() => {
     function onKeyDown(e) {
       const tag = document.activeElement?.tagName;
@@ -763,6 +764,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         loadNewPracticeCase();
         return;
       }
+      if (e.code === "Escape") {
+        e.preventDefault();
+        resetCase();
+        return;
+      }
 
       const move = (e.shiftKey && keyToMove[`shift+${e.code}`]) || keyToMove[e.code];
       if (move) {
@@ -772,7 +778,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [keyToMove, applyMove, revealAlg, loadNewPracticeCase]);
+  }, [keyToMove, applyMove, revealAlg, loadNewPracticeCase, resetCase]);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
 
