@@ -98,7 +98,10 @@ collection of named algorithms actually verified against a public source, not an
   rotation notation are translated to real moves (`R B' R' B`, `R' L R L'`, `Uv`); where a
   case listed multiple equivalent algorithms (one per recognition angle), only the one
   needing no incoming AUF is kept. The 12th listed case ("6c") is the already-solved state
-  and is omitted.
+  and is omitted. Also **L2C** (Last 2 Centers, `src/puzzles/algs/ftoL2c.js`, 13 cases), supplied
+  by this project's user as a screenshot, split into three groups by how many R U(') triggers
+  each algorithm chains together (1/2/3 Triggers), matching the line breaks shown per case in
+  the source image. **1L3T** (`src/puzzles/algs/fto1l3t.js`) is a placeholder with no cases yet.
 - **Megaminx** — **OLL** (`src/puzzles/algs/megaminxOll.js`, 178 cases) and **PLL**
   (`src/puzzles/algs/megaminxPll.js`, 151 cases), supplied by this project's user as
   `ollalgs.js`/`pllalgs.js`. Grouped by the source's own numbered/lettered groups (e.g. OLL

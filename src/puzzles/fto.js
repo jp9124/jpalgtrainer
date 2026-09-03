@@ -1,3 +1,5 @@
+import l3tSet from "./algs/fto1l3t";
+import l2cSet from "./algs/ftoL2c";
 import lbtSet from "./algs/ftoLbt";
 import lp1Set from "./algs/fto1lp";
 import tcpSet from "./algs/ftoTcp";
@@ -40,8 +42,8 @@ const controls = [
   // Wide moves (two layers together) — needed by LBT and TCP.
   { label: "u", move: "u", code: "Digit1", keyLabel: "1" },
   { label: "u'", move: "u'", code: "Digit2", keyLabel: "2" },
-  { label: "f", move: "f", code: "KeyZ", keyLabel: "Z" },
-  { label: "f'", move: "f'", code: "Period", keyLabel: "." },
+  { label: "f", move: "f", code: "KeyH", keyLabel: "⇧H", shift: true },
+  { label: "f'", move: "f'", code: "KeyG", keyLabel: "⇧G", shift: true },
   { label: "l", move: "l", code: "KeyV", keyLabel: "V" },
   { label: "l'", move: "l'", code: "KeyR", keyLabel: "R" },
   { label: "r", move: "r", code: "KeyU", keyLabel: "U" },
@@ -55,7 +57,7 @@ const controls = [
 // TCP, 1LP, and LBT are all verified against real, named public FTO
 // references — see each set's own file for its exact source and the move
 // translations applied. Add more via the Custom Set editor in the sidebar.
-const builtinSets = [tcpSet, lp1Set, lbtSet];
+const builtinSets = [l2cSet, lp1Set, tcpSet, l3tSet, lbtSet];
 
 export default {
   id: "fto",
