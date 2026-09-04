@@ -1,6 +1,4 @@
 import l4eSet from "./algs/pyraminxL4e";
-import ml4eRightSet from "./algs/pyraminxMl4eRight";
-import ml4eLeftSet from "./algs/pyraminxMl4eLeft";
 
 // No official cubing.js keyboard layout exists for Pyraminx, so this reuses
 // the same physical key positions as FTO/Megaminx for the matching face
@@ -24,7 +22,7 @@ const controls = [
   { label: "y'", move: "y", code: "Semicolon", keyLabel: ";" },
 ];
 
-const builtinSets = [l4eSet, ml4eRightSet, ml4eLeftSet];
+const builtinSets = [l4eSet];
 
 export default {
   id: "pyraminx",

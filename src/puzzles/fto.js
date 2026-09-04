@@ -1,6 +1,4 @@
-import l3tSet from "./algs/fto1l3t";
 import l2cSet from "./algs/ftoL2c";
-import lbtSet from "./algs/ftoLbt";
 import lp1Set from "./algs/fto1lp";
 import tcpSet from "./algs/ftoTcp";
 
@@ -54,10 +52,10 @@ const controls = [
   { label: "br'", move: "br'", code: "Slash", keyLabel: "/" },
 ];
 
-// TCP, 1LP, and LBT are all verified against real, named public FTO
+// TCP, 1LP, and L2C are all verified against real, named public FTO
 // references — see each set's own file for its exact source and the move
 // translations applied. Add more via the Custom Set editor in the sidebar.
-const builtinSets = [l2cSet, lp1Set, tcpSet, l3tSet, lbtSet];
+const builtinSets = [l2cSet, lp1Set, tcpSet];
 
 export default {
   id: "fto",
