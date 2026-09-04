@@ -1,4 +1,4 @@
-# WCA Alg Trainer (React)
+# Jung Park's Alg Trainer (React)
 
 ## Link: https://jpalgtrainer.netlify.app/ 
 
@@ -12,7 +12,7 @@ Square-1.
 Requires [Node.js](https://nodejs.org/) (18+).
 
 ```
-npm install
+npm installvscode-webview://0p18vgsmcj5j03986ftpf23h97ijjrrhdkrrvpr7doiobhp9a0s7/README.md#L1
 npm run dev
 ```
 
