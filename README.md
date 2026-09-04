@@ -139,8 +139,8 @@ collection of named algorithms actually verified against a public source, not an
   for a case (`/`-separated), only the first is kept. Every one of the 472 algorithms was
   parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
   then its inverse, returns to solved) before being included.
-- **5x5** — **L2E** (Last Two Edges, `src/puzzles/algs/cube5x5L2e.js`), split into "No Parity" (4 cases)
-  and "Parity" (8 cases), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
+- **5x5** — **L2E** (Last Two Edges, `src/puzzles/algs/cube5x5L2e.js`, 12 cases grouped into
+  "No Parity" (4 cases) and "Parity" (8 cases)), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
   user. The PDF shows a primary (bold) algorithm per case and, for some No Parity cases, a
   bolded alternative-angle algorithm below it — only the primary one is kept. Four cases used
   3Rw/3Lw (a deep, 3-layer wide turn with no key on this app's layout); rather than inventing

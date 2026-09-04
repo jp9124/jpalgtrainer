@@ -88,8 +88,17 @@ function randomOrientationAlg(puzzleId) {
 // the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx are order 3
 // (their faces are triangular, no "double" turn). Square-1 has no U move at
 // all (twist/slash only), so it's simply absent from this map — random AUF
-// isn't offered there.
+// isn't offered there. Still used for 5x5 to merge any naturally-occurring
+// consecutive U moves in a case's own alg text (see mergeUMoves) even though
+// random AUF itself is separately turned off there — see
+// RANDOM_AUF_DISABLED_PUZZLE_IDS.
 const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, pyraminx: 3 };
+
+// Puzzles with an ordinary U move (i.e. present in U_TURN_ORDER) where random
+// AUF is still turned off. 5x5's only builtin set (L2E) is practiced with
+// wide moves, not a face U turn, so folding extra U turns onto it doesn't
+// add anything worth practicing there.
+const RANDOM_AUF_DISABLED_PUZZLE_IDS = ["5x5x5"];
 
 // Square-1's x2/y2/z2 whole-puzzle rotations (see square1.js's controls):
 // real, animated moves on its canvas renderer, but not real cubing.js
@@ -131,6 +140,42 @@ function formatUAmount(amount, order) {
   const complement = order - normalized;
   if (normalized <= complement) return normalized === 1 ? "U" : `U${normalized}`;
   return complement === 1 ? "U'" : `U${complement}'`;
+}
+
+// "Random 3x3 stage" practice: before scrambling into a case, apply a random
+// outer-layer-only scramble first, so the rest of the cube sits in a
+// realistic unsolved state instead of the pristine solved cube these cases
+// are normally practiced against. Built for 5x5's L2E set specifically — in
+// a real reduction solve, the last two edges get fixed *during* edge
+// pairing, before the cube is ever solved down to a 3x3 state, so the
+// corners (and the other, already-paired edges) are however the original
+// scramble left them, not solved. Restricted to plain outer-layer turns
+// (U/D/L/R/F/B), never wide or inner-slice moves: those are exactly the
+// moves that turn a whole layer as one piece, which is what keeps a paired
+// edge's two wings moving together — a wide/slice move here could split a
+// pair apart, which no real solve would ever do at this stage.
+const RANDOM_STAGE_PUZZLE_IDS = ["5x5x5"];
+const OUTER_LAYER_AXIS = { U: "y", D: "y", L: "x", R: "x", F: "z", B: "z" };
+const OUTER_LAYER_FACES = Object.keys(OUTER_LAYER_AXIS);
+const MOVE_SUFFIXES = ["", "'", "2"];
+const RANDOM_STAGE_LENGTH = 25;
+
+// Avoids two consecutive turns on the same axis (U/D, L/R, or F/B) — the
+// same rule real scramble generators use, since back-to-back turns on one
+// axis can trivially cancel or combine into a single move, which would
+// leave this feature scrambling less than it looks like.
+function randomOuterLayerStageAlg() {
+  const moves = [];
+  let lastAxis = null;
+  for (let i = 0; i < RANDOM_STAGE_LENGTH; i++) {
+    let face;
+    do {
+      face = pick(OUTER_LAYER_FACES);
+    } while (OUTER_LAYER_AXIS[face] === lastAxis);
+    lastAxis = OUTER_LAYER_AXIS[face];
+    moves.push(face + pick(MOVE_SUFFIXES));
+  }
+  return moves.join(" ");
 }
 
 function mergeUMoves(algText, order) {
@@ -208,6 +253,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
   const [colorNeutralEnabled, setColorNeutralEnabled] = useState(initialPracticePrefs.colorNeutralEnabled);
   const [randomAufEnabled, setRandomAufEnabled] = useState(initialPracticePrefs.randomAufEnabled);
+  const [randomStageEnabled, setRandomStageEnabled] = useState(initialPracticePrefs.randomStageEnabled);
 
   // colorNeutralEnabled is a global preference (persisted independent of
   // puzzle, see loadPracticePrefs/savePracticePrefs), but only some puzzles
@@ -220,8 +266,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   // Same shape of override again: randomAufEnabled is global, but only
   // puzzles with a U move (i.e. every one but Square-1) support it — see
-  // U_TURN_ORDER's source note.
-  const randomAufActive = randomAufEnabled && puzzleConfig.id in U_TURN_ORDER;
+  // U_TURN_ORDER's source note. 5x5 is further excluded even though it has
+  // a U move — see RANDOM_AUF_DISABLED_PUZZLE_IDS.
+  const randomAufActive =
+    randomAufEnabled && puzzleConfig.id in U_TURN_ORDER && !RANDOM_AUF_DISABLED_PUZZLE_IDS.includes(puzzleConfig.id);
+
+  // Same shape of override again: randomStageEnabled is global, but the
+  // feature only means anything on puzzles it's built for — see
+  // RANDOM_STAGE_PUZZLE_IDS's source note.
+  const randomStageActive = randomStageEnabled && RANDOM_STAGE_PUZZLE_IDS.includes(puzzleConfig.id);
 
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
@@ -244,6 +297,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // The random AUF turns (possibly "") folded onto the front/back of the
   // current case's alg, kept for the same reset-reuse reason as above.
   const caseAufRef = useRef({ preAuf: "", postAuf: "" });
+  // The random-3x3-stage outer-layer scramble (possibly "") applied before
+  // the current case, kept for the same reset-reuse reason as rotationAlg/AUF.
+  const caseStageAlgRef = useRef("");
+  // Whether the current case's target is the plain solved state (mod
+  // rotationAlg) — false whenever stageAlg or c.setupAlg are in play, since
+  // those deliberately leave the target short of true-solved. See isSolved.
+  const targetIsPlainSolvedRef = useRef(true);
   const solveMovesRef = useRef([]);
   const lastCaseNameRef = useRef(null);
   const timerStartRef = useRef(0);
@@ -266,8 +326,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // when switching puzzles instead of resetting with the rest of this
   // puzzle-scoped state.
   useEffect(() => {
-    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled });
-  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled]);
+    savePracticePrefs({
+      orderedEnabled,
+      visibleTurningEnabled,
+      turnsPerSecond,
+      colorNeutralEnabled,
+      randomAufEnabled,
+      randomStageEnabled,
+    });
+  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled, randomStageEnabled]);
 
   // Sets an explicit list of case names to a given checked value in one
   // atomic update — used for toggling a single case, a whole group of
@@ -378,9 +445,18 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // pattern when color-neutral picked an orientation for this case) rather
   // than solvedPattern directly, so a color-neutral case correctly reads as
   // solved once it's back to ITS rotated target, not the canonical one.
+  //
+  // That engine shortcut only ever means "solved" in the true, whole-cube
+  // sense (mod orientation) — it has no notion of a target short of that.
+  // Cases whose target genuinely isn't true-solved (stageAlg's deliberately
+  // still-scrambled corners, or a setupAlg precondition like FTO's 1LP) must
+  // always go through the isIdentical(targetPatternRef) branch instead,
+  // tracked via targetIsPlainSolvedRef — verified against the real engine
+  // that skipping this for NxNxN cubes leaves experimentalIsSolved
+  // permanently false even once the case is correctly solved.
   const isSolved = useCallback(
     (pattern) => {
-      if (typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
+      if (targetIsPlainSolvedRef.current && typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
         return pattern.experimentalIsSolved({ ignorePuzzleOrientation: true, ignoreCenterOrientation: false });
       }
       return pattern.isIdentical(targetPatternRef.current ?? solvedPattern);
@@ -407,7 +483,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [activeSet, checkedCaseNames, orderedEnabled]);
 
   const loadPracticeCase = useCallback(
-    (c, { rotationAlg = "", preAuf = "", postAuf = "" } = {}) => {
+    (c, { rotationAlg = "", preAuf = "", postAuf = "", stageAlg = "" } = {}) => {
       if (!kpuzzle || !solvedPattern) return;
       setCurrentCase(c);
       setRevealed(false);
@@ -415,6 +491,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       solveMovesRef.current = [];
       caseRotationAlgRef.current = rotationAlg;
       caseAufRef.current = { preAuf, postAuf };
+      caseStageAlgRef.current = stageAlg;
       stopTimer();
 
       setDisplayAlg(
@@ -447,12 +524,20 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // this case) goes first: rotate the solved reference, then scramble
       // relative to THAT — so the case's alg text and solved-check both
       // stay correct without needing to touch c.alg at all (see
-      // randomOrientationAlg's source note for why this works).
-      const fullSetupAlg = [rotationAlg, c.setupAlg, setupAlg].filter(Boolean).join(" ");
+      // randomOrientationAlg's source note for why this works). stageAlg
+      // (empty unless random-3x3-stage picked an outer-layer scramble for
+      // this case) works the same way as c.setupAlg below it — a fixed
+      // precondition applied before the case's own inverted alg, and folded
+      // into what counts as "solved" too, so the target is "however the
+      // stage scramble left the rest of the cube, with these two edges now
+      // fixed" rather than the fully solved cube (see
+      // randomOuterLayerStageAlg's source note).
+      const fullSetupAlg = [rotationAlg, stageAlg, c.setupAlg, setupAlg].filter(Boolean).join(" ");
       scrambleAlgRef.current = fullSetupAlg;
       scrambledPatternRef.current = solvedPattern.applyAlg(fullSetupAlg);
-      const targetSetupAlg = [rotationAlg, c.setupAlg].filter(Boolean).join(" ");
+      const targetSetupAlg = [rotationAlg, stageAlg, c.setupAlg].filter(Boolean).join(" ");
       targetPatternRef.current = targetSetupAlg ? solvedPattern.applyAlg(targetSetupAlg) : solvedPattern;
+      targetIsPlainSolvedRef.current = !stageAlg && !c.setupAlg;
 
       setTimerLabel("0.00");
       setTimerStatus("idle");
@@ -477,6 +562,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     solveMovesRef.current = [];
     caseRotationAlgRef.current = "";
     caseAufRef.current = { preAuf: "", postAuf: "" };
+    caseStageAlgRef.current = "";
+    targetIsPlainSolvedRef.current = true;
     stopTimer();
 
     scrambleAlgRef.current = "";
@@ -502,8 +589,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       rotationAlg: colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "",
       preAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
       postAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+      stageAlg: randomStageActive ? randomOuterLayerStageAlg() : "",
     });
-  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, puzzleConfig]);
+  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, randomStageActive, puzzleConfig]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -607,6 +695,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         rotationAlg: caseRotationAlgRef.current,
         preAuf: caseAufRef.current.preAuf,
         postAuf: caseAufRef.current.postAuf,
+        stageAlg: caseStageAlgRef.current,
       });
     } else loadFreePlay();
   }, [currentCase, loadPracticeCase, loadFreePlay]);
@@ -874,6 +963,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setColorNeutralEnabled,
     randomAufEnabled,
     setRandomAufEnabled,
+    randomStageEnabled,
+    setRandomStageEnabled,
 
     customSetText,
     setCustomSetText,
