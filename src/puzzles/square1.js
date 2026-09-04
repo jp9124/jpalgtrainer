@@ -1,4 +1,6 @@
+import coSet from "./algs/square1Co";
 import eoSet from "./algs/square1EO";
+import epSet from "./algs/square1Ep";
 
 // Square-1 doesn't turn like the other puzzles here — instead of discrete
 // faces, it has a top-layer twist, a bottom-layer twist (each in twelfths,
@@ -41,8 +43,9 @@ const controls = [
 
 // Real Square-1 algorithms are dense numeric sequences, and most sources
 // disagree on the exact digits for the same named algorithm — see
-// square1EO.js for how the one built-in set here (EO) was verified instead
-// of just trusted. Add your own sets via the Custom Set editor.
+// square1EO.js for how EO was verified instead of just trusted (CO and EP,
+// by contrast, were supplied whole by this project's user — see each file's
+// own source note). Add your own sets via the Custom Set editor.
 export default {
   id: "square1",
   label: "Square-1",
@@ -50,5 +53,5 @@ export default {
   cubingPuzzleId: "square1",
   controlsType: "square1",
   controls,
-  builtinSets: [eoSet],
+  builtinSets: [eoSet, coSet, epSet],
 };

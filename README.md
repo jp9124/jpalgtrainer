@@ -123,8 +123,11 @@ collection of named algorithms actually verified against a public source, not an
   sequences, and every source consulted while building this disagreed on the exact digits for
   the same named algorithm, so rather than trust the source's listed algorithm text directly,
   each one here was derived as the literal inverse of the source's own "setup" scramble — see
-  the source note in `algs/square1EO.js` for why that's the more trustworthy value. Add more via the
-  Custom Set editor once you have a source you trust.
+  the source note in `algs/square1EO.js` for why that's the more trustworthy value. Also **CO**
+  (`src/puzzles/algs/square1Co.js`, 6 cases) and **EP** (`src/puzzles/algs/square1Ep.js`, 51
+  cases across 6 groups), supplied whole by this project's user from a private Google Sheet —
+  see each file's own source note for how its twist notation and repeated-name cases were
+  handled. Add more via the Custom Set editor once you have a source you trust.
 - **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/algs/cube2x2Cll.js`, 40 cases each, 160 total),
   supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
   (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases
