@@ -675,7 +675,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // would animate the scramble (the inverted alg) before the actual solve,
   // which looks like the cube solving itself then re-scrambling.
   //
-  // With visible turning on, real <twisty-player> instances hand the whole
+  // The reference cube always turns visibly here, independent of the
+  // practice-side "visible turning" toggle (see LEARN_TEMPO_SCALE, pinned
+  // the same way) — an instant jump to the solved state defeats the point
+  // of a reference demo. Real <twisty-player> instances hand the whole
   // "scramble + solve" alg to the player's native play() — which respects
   // tempoScale and turns smoothly — but positioned to *start* partway
   // through, right where the solve begins, via the numeric `timestamp`
@@ -685,42 +688,28 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // practice cube), doesn't work here: cubing's own implementation of that
   // method is an unfinished stub (its source literally reads "TODO: Animate
   // the new move"), so calls fired in a tight loop collapse into one jump
-  // with only the last move visibly turning — which is exactly the bug this
-  // replaced. Square-1's canvas player is the one exception: its
-  // experimentalAddMove is this app's own hand-rolled, genuinely-animated
-  // implementation (see square1Renderer.js) and it has no `timestamp`
-  // setter to offset into, so it keeps using the per-move loop.
-  //
-  // With visible turning off, step through the moves one at a time, each
-  // step an instant jump to "scramble + moves done so far".
+  // with only the last move visibly turning. Square-1's canvas player is
+  // the one exception: its experimentalAddMove is this app's own
+  // hand-rolled, genuinely-animated implementation (see square1Renderer.js)
+  // and it has no `timestamp` setter to offset into, so it uses the
+  // per-move loop instead.
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
-    const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
 
     player.alg = scrambleAlg;
     player.jumpToEnd();
 
-    if (visibleTurningEnabled) {
-      if (puzzleConfig.id === "square1") {
-        moves.forEach((move) => player.experimentalAddMove(move));
-      } else {
-        player.alg = `${scrambleAlg} ${learnCase.alg}`;
-        player.timestamp = unscaledAlgDuration(scrambleAlg);
-        player.play();
-      }
-      return;
+    if (puzzleConfig.id === "square1") {
+      const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
+      moves.forEach((move) => player.experimentalAddMove(move));
+    } else {
+      player.alg = `${scrambleAlg} ${learnCase.alg}`;
+      player.timestamp = unscaledAlgDuration(scrambleAlg);
+      player.play();
     }
-
-    moves.forEach((_, i) => {
-      setTimeout(() => {
-        const doneMoves = moves.slice(0, i + 1).join(" ");
-        player.alg = `${scrambleAlg} ${doneMoves}`;
-        player.jumpToEnd();
-      }, (i + 1) * 400);
-    });
-  }, [learnPlayerRef, learnCase, visibleTurningEnabled, puzzleConfig]);
+  }, [learnPlayerRef, learnCase, puzzleConfig]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
