@@ -22,7 +22,7 @@ const cases = [
   { name: "Case 10", alg: "R U' R' U R U' R' U' R U R'", group: "3 Triggers" },
   { name: "Case 11", alg: "R U R' U' R U' R' U R U R'", group: "3 Triggers" },
   { name: "Case 12", alg: "R U R' U' R U' R' U R U' R'", group: "3 Triggers" },
-  { name: "Case 13", alg: "R U R' U' R U' R' U' R U' R'", group: "3 Triggers" },
+  { name: "Case 13", alg: "R U R' U' R U R' U' R U' R'", group: "3 Triggers" },
 ];
 
 export default {
