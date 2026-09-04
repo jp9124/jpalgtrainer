@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A React algorithm trainer for twisty puzzles (FTO, Megaminx, Pyraminx, Skewb, Square-1), modeled after
+A React algorithm trainer for twisty puzzles (FTO, Pyraminx, Square-1), modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Puzzle rendering and move/state logic come
 from the `cubing` npm package (the engine behind alpha.twizzle.net) — an internet connection is required
 to run it, since `cubing` fetches puzzle definitions at runtime. The one exception is Square-1: cubing.js
@@ -73,7 +73,7 @@ list it there.
 - `builtinSets` are named algorithm collections (`{ id, name, source, cases: [{ name, alg }] }`), each
   verified against a specific public source rather than invented — see README.md's "About the built-in
   algorithms" section for what's used per puzzle and why Square-1 intentionally ships with none. The
-  collections themselves live in `src/puzzles/algs/` (e.g. `algs/cube3x3Zbll.js`, `algs/megaminxOll.js`), one
+  collections themselves live in `src/puzzles/algs/` (e.g. `algs/cube3x3Zbll.js`, `algs/ftoL2c.js`), one
   file per source, imported into the owning puzzle config — kept separate so a puzzle's config file
   stays about controls/metadata, not thousands of lines of case data.
 - The "Custom Set" the user pastes into the sidebar is validated live against the active puzzle's real
@@ -98,7 +98,7 @@ Each component under `src/components/` owns a paired `.jsx` + `.module.css` (top
 
 ## Keyboard layout
 
-FTO and Megaminx reuse their official cubing.js/Twizzle keyboard layouts (see the comment at the top of
-`src/puzzles/fto.js`). Pyraminx and Skewb have no official layout, so they reuse the same physical key
-positions as FTO/Megaminx for matching face letters, for muscle-memory consistency. Square-1 has no
+FTO reuses its official cubing.js/Twizzle keyboard layout (see the comment at the top of
+`src/puzzles/fto.js`). Pyraminx has no official layout, so it reuses the same physical key
+positions as FTO for matching face letters, for muscle-memory consistency. Square-1 has no
 keyboard layout at all — it's click-only via `Square1Pad`.

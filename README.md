@@ -4,8 +4,7 @@
 
 A React algorithm trainer for twisty puzzles, modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Started with FTO
-(Face-Turning Octahedron); now also covers Megaminx, Pyraminx, Skewb, and
-Square-1.
+(Face-Turning Octahedron); now also covers Pyraminx and Square-1.
 
 ## Running it
 
@@ -31,7 +30,7 @@ src/
   App.jsx / App.css               top-level layout
   index.css                       CSS variables, reset, base element styles
   puzzles/                        one config file per puzzle
-    fto.js, megaminx.js, pyraminx.js, skewb.js, square1.js
+    fto.js, pyraminx.js, square1.js
     index.js                      aggregates them into PUZZLES
   lib/storage.js                  localStorage read/write helpers (namespaced per puzzle)
   hooks/
@@ -76,11 +75,11 @@ Square-1's `"square1"`) needs its own control component, wired into `PracticeAre
 
 ## Keyboard layout
 
-FTO and Megaminx reuse their **official cubing.js/Twizzle keyboard layouts**. Pyraminx and
-Skewb have no official layout, so they reuse the same physical key positions for their
-matching face letters (U/L/R/B), for muscle-memory consistency across puzzles:
+FTO reuses its **official cubing.js/Twizzle keyboard layout**. Pyraminx has no official
+layout, so it reuses the same physical key positions for its matching face letters
+(U/L/R/B), for muscle-memory consistency across puzzles:
 
-I/K=R, W/O=B, S/L=D (FTO) or FR (Megaminx), D/E=L, J/F=U, H/G=F, Q/Z=BL, ./P=BR (FTO only)
+I/K=R, W/O=B, S/L=D (FTO), D/E=L, J/F=U, H/G=F, Q/Z=BL, ./P=BR (FTO only)
 
 Square-1 doesn't turn like the others — it gets its own click-only control panel (top/bottom
 twist amounts + a slash button) instead of a keyboard layout.
@@ -102,22 +101,8 @@ collection of named algorithms actually verified against a public source, not an
   by this project's user as a screenshot, split into three groups by how many R U(') triggers
   each algorithm chains together (1/2/3 Triggers), matching the line breaks shown per case in
   the source image. **1L3T** (`src/puzzles/algs/fto1l3t.js`) is a placeholder with no cases yet.
-- **Megaminx** — **OLL** (`src/puzzles/algs/megaminxOll.js`, 178 cases) and **PLL**
-  (`src/puzzles/algs/megaminxPll.js`, 151 cases), supplied by this project's user as
-  `ollalgs.js`/`pllalgs.js`. Grouped by the source's own numbered/lettered groups (e.g. OLL
-  "Group 1", PLL "Group C"); a group with more than 6 cases is split in half (e.g. "Group Ca"/
-  "Group Cb"). The single empty "solved" PLL entry is omitted — not a practicable case. Every
-  case was parsed and round-trip-verified against the real `cubing` engine. Three of the
-  source's move families (BR/BL/DR) turned out to be a y-rotation conjugate of a face this app
-  already has a key for (e.g. BR = y R y') and were rewritten to reuse it, each rewrite
-  verified to produce the identical resulting pattern to the original token; bR/dR had no such
-  equivalent, so those got two dedicated keys instead (see the source note in
-  `algs/megaminxOll.js` for detail). This replaces the previous small "Corner Orientation"/"Edge
-  Permutation" sets, which just pointed at reusing 3x3's own Sune/T-perm on Megaminx's last
-  layer (per SpeedCubeShop's guide) — still true, but superseded by full OLL/PLL coverage.
 - **Pyraminx** — the Speedsolving Wiki's Pyraminx algorithms page (ELL and Last-Layer
   sections).
-- **Skewb** — Sarah's Cubing Site "Speedskewbin" guide, read directly from the source PDF.
 - **Square-1** — **EO** (`src/puzzles/algs/square1EO.js`, 7 cases: the non-trivial counts of
   misoriented top-layer edges), from SpeedCubeDB. Real Square-1 algorithms are dense numeric
   sequences, and every source consulted while building this disagreed on the exact digits for

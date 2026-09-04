@@ -2,11 +2,11 @@ import { useTrainerContext } from "../../context/TrainerContext.jsx";
 import styles from "./Sidebar.module.css";
 
 // Puzzles color-neutral mode actually works on — it needs whole-puzzle
-// rotation moves that only these five expose (see randomOrientationAlg's
+// rotation moves that only these four expose (see randomOrientationAlg's
 // source note in useTrainer.js); it's simply hidden everywhere else rather
 // than shown disabled, since it doesn't apply there at all.
-const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
-const COLOR_NEUTRAL_LIMITED = ["megaminx", "pyraminx"];
+const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "pyraminx"];
+const COLOR_NEUTRAL_LIMITED = ["pyraminx"];
 
 // Every puzzle with a U move supports random AUF — everything except
 // Square-1, whose moves are twist/slash pairs with no discrete U turn at

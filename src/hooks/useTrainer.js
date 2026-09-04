@@ -47,20 +47,15 @@ function unscaledAlgDuration(algString) {
 // before scrambling into a case, so cases aren't always studied from the
 // same fixed color scheme. Built only from rotation tokens verified against
 // the real `cubing` engine (see the research behind this feature) — cube
-// puzzles get the standard 24-way x/y/z rotation group, but megaminx's
-// kpuzzle only accepts x2/y/y'/y2 (10 reachable orientations, not the full
-// 60 — no other axis is exposed; "Could not split X/Z into face names" for
-// anything else) and pyraminx only accepts y/y'/y2 (3 orientations, all
-// sharing the same "up" vertex; "Bad move x"/"Bad move z" otherwise). Not
-// true full color neutrality for those two, just the rotation variety the
-// engine actually exposes.
+// puzzles get the standard 24-way x/y/z rotation group, but pyraminx only
+// accepts y/y'/y2 (3 orientations, all sharing the same "up" vertex; "Bad
+// move x"/"Bad move z" otherwise). Not true full color neutrality for that
+// one, just the rotation variety the engine actually exposes.
 const CUBE_UP_SETUPS = ["", "x", "x2", "x'", "z", "z'"];
 const CUBE_SPINS = ["", "y", "y2", "y'"];
-const MEGAMINX_UP_SETUPS = ["", "x2"];
-const MEGAMINX_SPINS = ["", "y", "y2", "y2 y", "y'"];
 const PYRAMINX_SPINS = ["", "y", "y2"];
 
-const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
+const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "pyraminx"];
 
 function pick(options) {
   return options[Math.floor(Math.random() * options.length)];
@@ -72,8 +67,6 @@ function randomOrientationAlg(puzzleId) {
     case "3x3x3":
     case "5x5x5":
       return [pick(CUBE_UP_SETUPS), pick(CUBE_SPINS)].filter(Boolean).join(" ");
-    case "megaminx":
-      return [pick(MEGAMINX_UP_SETUPS), pick(MEGAMINX_SPINS)].filter(Boolean).join(" ");
     case "pyraminx":
       return pick(PYRAMINX_SPINS);
     default:
@@ -92,11 +85,11 @@ function randomOrientationAlg(puzzleId) {
 //
 // The order of U (how many distinct turns exist before it repeats back to
 // no-op) varies by puzzle — verified against the real engine, not assumed:
-// the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx/Skewb are
-// order 3 (their faces are triangular, no "double" turn), Megaminx is order
-// 5 (pentagonal faces). Square-1 has no U move at all (twist/slash only),
-// so it's simply absent from this map — random AUF isn't offered there.
-const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, pyraminx: 3, skewb: 3 };
+// the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx are order 3
+// (their faces are triangular, no "double" turn). Square-1 has no U move at
+// all (twist/slash only), so it's simply absent from this map — random AUF
+// isn't offered there.
+const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, pyraminx: 3 };
 
 // Square-1's x2/y2/z2 whole-puzzle rotations (see square1.js's controls):
 // real, animated moves on its canvas renderer, but not real cubing.js
@@ -378,8 +371,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // wrongly call that "not solved". cubing.js has a real, tested check for
   // this (KPattern.experimentalIsSolved({ ignorePuzzleOrientation: true })),
   // but it only works for plain NxNxN cubes (2x2x2/3x3x3/5x5x5) — verified
-  // it throws "not supported" for FTO/Megaminx/Pyraminx/Skewb/Square-1, none
-  // of which expose the rotation moves needed to build an equivalent
+  // it throws "not supported" for FTO/Pyraminx/Square-1, none of which
+  // expose the rotation moves needed to build an equivalent
   // ourselves, so those puzzles keep the exact-orientation check — but
   // against targetPatternRef (normally solvedPattern, but a specific rotated
   // pattern when color-neutral picked an orientation for this case) rather
