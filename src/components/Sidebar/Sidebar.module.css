@@ -133,16 +133,20 @@
   flex: none;
 }
 
-.tpsInput {
-  width: 56px;
+.speedOptions {
+  display: flex;
+  gap: 4px;
   flex: none;
-  background: var(--panel-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 12px;
-  transform: none;
+}
+
+.speedOptions .small {
+  padding: 2px 8px;
+}
+
+.speedOptionActive {
+  background: var(--accent);
+  color: var(--panel);
+  border-color: var(--accent);
 }
 
 .sourceTag {

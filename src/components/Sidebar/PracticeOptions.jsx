@@ -13,6 +13,8 @@ const COLOR_NEUTRAL_LIMITED = ["megaminx", "pyraminx"];
 // all (see U_TURN_ORDER's source note in useTrainer.js).
 const RANDOM_AUF_UNSUPPORTED = ["square1"];
 
+const TURN_SPEED_OPTIONS = [5, 10, 20];
+
 export default function PracticeOptions() {
   const {
     orderedEnabled,
@@ -84,17 +86,19 @@ export default function PracticeOptions() {
       </div>
       {visibleTurningEnabled && (
         <div className={styles.toggleRow}>
-          <label htmlFor="turnsPerSecondInput">Turn speed (turns/sec)</label>
-          <input
-            id="turnsPerSecondInput"
-            type="number"
-            min="1"
-            max="60"
-            step="1"
-            value={turnsPerSecond}
-            onChange={(e) => setTurnsPerSecond(Math.max(1, Number(e.target.value) || 1))}
-            className={styles.tpsInput}
-          />
+          <span>Turn speed (turns/sec)</span>
+          <div className={styles.speedOptions}>
+            {TURN_SPEED_OPTIONS.map((speed) => (
+              <button
+                key={speed}
+                type="button"
+                className={`${styles.small} ${turnsPerSecond === speed ? styles.speedOptionActive : ""}`}
+                onClick={() => setTurnsPerSecond(speed)}
+              >
+                {speed}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </section>

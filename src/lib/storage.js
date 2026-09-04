@@ -16,7 +16,7 @@ export function loadPracticePrefs() {
     return {
       orderedEnabled: parsed?.orderedEnabled ?? true,
       visibleTurningEnabled: parsed?.visibleTurningEnabled ?? false,
-      turnsPerSecond: parsed?.turnsPerSecond ?? 15,
+      turnsPerSecond: parsed?.turnsPerSecond ?? 10,
       colorNeutralEnabled: parsed?.colorNeutralEnabled ?? false,
       randomAufEnabled: parsed?.randomAufEnabled ?? false,
     };
@@ -24,7 +24,7 @@ export function loadPracticePrefs() {
     return {
       orderedEnabled: true,
       visibleTurningEnabled: false,
-      turnsPerSecond: 15,
+      turnsPerSecond: 10,
       colorNeutralEnabled: false,
       randomAufEnabled: false,
     };
