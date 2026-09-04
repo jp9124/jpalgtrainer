@@ -112,7 +112,13 @@ collection of named algorithms actually verified against a public source, not an
   (`src/puzzles/algs/square1Co.js`, 6 cases) and **EP** (`src/puzzles/algs/square1Ep.js`, 51
   cases across 6 groups), supplied whole by this project's user from a private Google Sheet —
   see each file's own source note for how its twist notation and repeated-name cases were
-  handled. Add more via the Custom Set editor once you have a source you trust.
+  handled. Also **Cube Shape** (`src/puzzles/algs/square1CubeShape.js`, 169 cases across 7
+  groups), from cubingapp.com — one case per named shape-pair (e.g. "Kite / Kite"), grouped by
+  how many slash moves the fix takes ("1 Slash" through "7 Slashes"); where the source listed
+  more than one algorithm for a case, only the first-listed is kept. Also **CP**
+  (`src/puzzles/algs/square1Cp.js`, 8 cases across 3 groups), also from cubingapp.com — cases
+  named by each layer's corner-pair state ("Adj"/"Opp"/"Solved"), grouped by the top layer's
+  state. Add more via the Custom Set editor once you have a source you trust.
 - **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/algs/cube2x2Cll.js`, 40 cases each, 160 total),
   supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
   (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases

@@ -1,4 +1,6 @@
 import coSet from "./algs/square1Co";
+import cpSet from "./algs/square1Cp";
+import cubeShapeSet from "./algs/square1CubeShape";
 import eoSet from "./algs/square1EO";
 import epSet from "./algs/square1Ep";
 
@@ -53,5 +55,5 @@ export default {
   cubingPuzzleId: "square1",
   controlsType: "square1",
   controls,
-  builtinSets: [eoSet, coSet, epSet],
+  builtinSets: [cubeShapeSet, eoSet, coSet, cpSet, epSet],
 };
