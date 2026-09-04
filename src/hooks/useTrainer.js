@@ -626,26 +626,30 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     syncPracticePlayer();
   }, [currentCase, displayAlg, showLearnCase, syncPracticePlayer]);
 
-  // With visible turning on, hand the whole alg to the player's native
-  // playback (respecting tempoScale) for smooth turning. Otherwise fall
-  // back to the original behavior: step through the moves one at a time,
-  // each step an instant jump to "scramble + moves done so far".
+  // Always start from the case's recognized position (scramble applied),
+  // never the solved state — jumpToStart()+play() over "scramble solve"
+  // would animate the scramble (the inverted alg) before the actual solve,
+  // which looks like the cube solving itself then re-scrambling.
+  //
+  // With visible turning on, animate the solve moves onto that position one
+  // at a time via experimentalAddMove — the same mechanism
+  // animateMoveOnPracticePlayer already uses for the practice cube — so only
+  // the solve turns. Otherwise fall back to the original behavior: step
+  // through the moves one at a time, each step an instant jump to "scramble
+  // + moves done so far".
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
-
-    if (visibleTurningEnabled) {
-      player.alg = `${scrambleAlg} ${learnCase.alg}`;
-      player.jumpToStart();
-      player.play();
-      return;
-    }
-
     const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
 
     player.alg = scrambleAlg;
     player.jumpToEnd();
+
+    if (visibleTurningEnabled) {
+      moves.forEach((move) => player.experimentalAddMove(move));
+      return;
+    }
 
     moves.forEach((_, i) => {
       setTimeout(() => {
