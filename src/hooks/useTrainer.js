@@ -7,6 +7,42 @@ function emptyCustomSet() {
   return { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases: [] };
 }
 
+// cubing's own per-move duration on its internal (unscaled, pre-tempoScale)
+// timeline — see defaultDurationForAmount in cubing/twisty's source: quarter
+// turns take 1000, half turns 1500, anything else 2000. Mirrored here so
+// playLearnAlgorithm can work out where the solve begins on a combined
+// "scramble + solve" alg's timestamp axis, and tell <twisty-player> to start
+// playback exactly there via its public `timestamp` setter — every other
+// reference-panel positioning move in this file uses only jumpToStart/
+// jumpToEnd (see the note above learnScrambleAlgFor), but neither of those
+// can express "start from the middle of a longer alg", which is the one
+// thing this needs.
+function unscaledMoveDuration(amount) {
+  switch (Math.abs(amount)) {
+    case 0:
+      return 0;
+    case 1:
+      return 1000;
+    case 2:
+      return 1500;
+    default:
+      return 2000;
+  }
+}
+
+function unscaledAlgDuration(algString) {
+  if (!algString) return 0;
+  try {
+    let total = 0;
+    for (const move of new Alg(algString).experimentalLeafMoves()) {
+      total += unscaledMoveDuration(move.amount);
+    }
+    return total;
+  } catch {
+    return 0;
+  }
+}
+
 // "Color neutral" practice: rotate the whole puzzle to a random orientation
 // before scrambling into a case, so cases aren't always studied from the
 // same fixed color scheme. Built only from rotation tokens verified against
@@ -631,12 +667,24 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // would animate the scramble (the inverted alg) before the actual solve,
   // which looks like the cube solving itself then re-scrambling.
   //
-  // With visible turning on, animate the solve moves onto that position one
-  // at a time via experimentalAddMove — the same mechanism
-  // animateMoveOnPracticePlayer already uses for the practice cube — so only
-  // the solve turns. Otherwise fall back to the original behavior: step
-  // through the moves one at a time, each step an instant jump to "scramble
-  // + moves done so far".
+  // With visible turning on, real <twisty-player> instances hand the whole
+  // "scramble + solve" alg to the player's native play() — which respects
+  // tempoScale and turns smoothly — but positioned to *start* partway
+  // through, right where the solve begins, via the numeric `timestamp`
+  // setter (unscaledAlgDuration works out that offset). The tempting
+  // alternative, animating each solve move individually via
+  // experimentalAddMove (as animateMoveOnPracticePlayer does for the
+  // practice cube), doesn't work here: cubing's own implementation of that
+  // method is an unfinished stub (its source literally reads "TODO: Animate
+  // the new move"), so calls fired in a tight loop collapse into one jump
+  // with only the last move visibly turning — which is exactly the bug this
+  // replaced. Square-1's canvas player is the one exception: its
+  // experimentalAddMove is this app's own hand-rolled, genuinely-animated
+  // implementation (see square1Renderer.js) and it has no `timestamp`
+  // setter to offset into, so it keeps using the per-move loop.
+  //
+  // With visible turning off, step through the moves one at a time, each
+  // step an instant jump to "scramble + moves done so far".
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
@@ -647,7 +695,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     player.jumpToEnd();
 
     if (visibleTurningEnabled) {
-      moves.forEach((move) => player.experimentalAddMove(move));
+      if (puzzleConfig.id === "square1") {
+        moves.forEach((move) => player.experimentalAddMove(move));
+      } else {
+        player.alg = `${scrambleAlg} ${learnCase.alg}`;
+        player.timestamp = unscaledAlgDuration(scrambleAlg);
+        player.play();
+      }
       return;
     }
 
@@ -658,7 +712,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         player.jumpToEnd();
       }, (i + 1) * 400);
     });
-  }, [learnPlayerRef, learnCase, visibleTurningEnabled]);
+  }, [learnPlayerRef, learnCase, visibleTurningEnabled, puzzleConfig]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
