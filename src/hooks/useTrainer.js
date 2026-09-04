@@ -7,6 +7,42 @@ function emptyCustomSet() {
   return { id: CUSTOM_SET_ID, name: "Custom Set", source: "Your own algorithms", cases: [] };
 }
 
+// cubing's own per-move duration on its internal (unscaled, pre-tempoScale)
+// timeline — see defaultDurationForAmount in cubing/twisty's source: quarter
+// turns take 1000, half turns 1500, anything else 2000. Mirrored here so
+// playLearnAlgorithm can work out where the solve begins on a combined
+// "scramble + solve" alg's timestamp axis, and tell <twisty-player> to start
+// playback exactly there via its public `timestamp` setter — every other
+// reference-panel positioning move in this file uses only jumpToStart/
+// jumpToEnd (see the note above learnScrambleAlgFor), but neither of those
+// can express "start from the middle of a longer alg", which is the one
+// thing this needs.
+function unscaledMoveDuration(amount) {
+  switch (Math.abs(amount)) {
+    case 0:
+      return 0;
+    case 1:
+      return 1000;
+    case 2:
+      return 1500;
+    default:
+      return 2000;
+  }
+}
+
+function unscaledAlgDuration(algString) {
+  if (!algString) return 0;
+  try {
+    let total = 0;
+    for (const move of new Alg(algString).experimentalLeafMoves()) {
+      total += unscaledMoveDuration(move.amount);
+    }
+    return total;
+  } catch {
+    return 0;
+  }
+}
+
 // "Color neutral" practice: rotate the whole puzzle to a random orientation
 // before scrambling into a case, so cases aren't always studied from the
 // same fixed color scheme. Built only from rotation tokens verified against
@@ -68,6 +104,10 @@ const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, 
 // engine, not assumed). applyMove below skips kpuzzle validation for
 // exactly these tokens instead of treating them as puzzle-agnostic.
 const SQUARE1_VIEW_ROTATIONS = new Set(["x2", "y2", "z2"]);
+
+// Fixed playback speed for the reference/learn cube, independent of the
+// practice cube's user-selected turn speed — see the tempoScale sync effect.
+const LEARN_TEMPO_SCALE = 1.25;
 
 function randomAufAlg(puzzleId) {
   const order = U_TURN_ORDER[puzzleId];
@@ -297,12 +337,16 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   // tempoScale is ~1:1 with quarter-turns-per-second (a tempoScale of N means
   // a single quarter turn, whose base duration is 1000ms, takes 1000/N ms) —
-  // see cubing's defaultDurationForAmount. Kept in sync on both players
-  // whenever the desired speed changes, independent of whether visible
-  // turning is currently on (jumpToEnd() ignores it either way).
+  // see cubing's defaultDurationForAmount. Kept in sync whenever the desired
+  // speed changes, independent of whether visible turning is currently on
+  // (jumpToEnd() ignores it either way). The practice player follows the
+  // user's chosen speed; the reference player is pinned to LEARN_TEMPO_SCALE
+  // instead — at the practice speeds this app offers (5+ turns/sec), a full
+  // algorithm plays back too fast to actually watch, which defeats the
+  // point of a reference demo.
   useEffect(() => {
     if (practicePlayerRef.current) practicePlayerRef.current.tempoScale = turnsPerSecond;
-    if (learnPlayerRef.current) learnPlayerRef.current.tempoScale = turnsPerSecond;
+    if (learnPlayerRef.current) learnPlayerRef.current.tempoScale = LEARN_TEMPO_SCALE;
   }, [turnsPerSecond, practicePlayerRef, learnPlayerRef, kpuzzle]);
 
   // Animate a single applied move by appending it to the player's current
@@ -626,26 +670,48 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     syncPracticePlayer();
   }, [currentCase, displayAlg, showLearnCase, syncPracticePlayer]);
 
-  // With visible turning on, hand the whole alg to the player's native
-  // playback (respecting tempoScale) for smooth turning. Otherwise fall
-  // back to the original behavior: step through the moves one at a time,
-  // each step an instant jump to "scramble + moves done so far".
+  // Always start from the case's recognized position (scramble applied),
+  // never the solved state — jumpToStart()+play() over "scramble solve"
+  // would animate the scramble (the inverted alg) before the actual solve,
+  // which looks like the cube solving itself then re-scrambling.
+  //
+  // With visible turning on, real <twisty-player> instances hand the whole
+  // "scramble + solve" alg to the player's native play() — which respects
+  // tempoScale and turns smoothly — but positioned to *start* partway
+  // through, right where the solve begins, via the numeric `timestamp`
+  // setter (unscaledAlgDuration works out that offset). The tempting
+  // alternative, animating each solve move individually via
+  // experimentalAddMove (as animateMoveOnPracticePlayer does for the
+  // practice cube), doesn't work here: cubing's own implementation of that
+  // method is an unfinished stub (its source literally reads "TODO: Animate
+  // the new move"), so calls fired in a tight loop collapse into one jump
+  // with only the last move visibly turning — which is exactly the bug this
+  // replaced. Square-1's canvas player is the one exception: its
+  // experimentalAddMove is this app's own hand-rolled, genuinely-animated
+  // implementation (see square1Renderer.js) and it has no `timestamp`
+  // setter to offset into, so it keeps using the per-move loop.
+  //
+  // With visible turning off, step through the moves one at a time, each
+  // step an instant jump to "scramble + moves done so far".
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
-
-    if (visibleTurningEnabled) {
-      player.alg = `${scrambleAlg} ${learnCase.alg}`;
-      player.jumpToStart();
-      player.play();
-      return;
-    }
-
     const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
 
     player.alg = scrambleAlg;
     player.jumpToEnd();
+
+    if (visibleTurningEnabled) {
+      if (puzzleConfig.id === "square1") {
+        moves.forEach((move) => player.experimentalAddMove(move));
+      } else {
+        player.alg = `${scrambleAlg} ${learnCase.alg}`;
+        player.timestamp = unscaledAlgDuration(scrambleAlg);
+        player.play();
+      }
+      return;
+    }
 
     moves.forEach((_, i) => {
       setTimeout(() => {
@@ -654,7 +720,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         player.jumpToEnd();
       }, (i + 1) * 400);
     });
-  }, [learnPlayerRef, learnCase, visibleTurningEnabled]);
+  }, [learnPlayerRef, learnCase, visibleTurningEnabled, puzzleConfig]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
