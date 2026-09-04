@@ -105,6 +105,10 @@ const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, 
 // exactly these tokens instead of treating them as puzzle-agnostic.
 const SQUARE1_VIEW_ROTATIONS = new Set(["x2", "y2", "z2"]);
 
+// Fixed playback speed for the reference/learn cube, independent of the
+// practice cube's user-selected turn speed — see the tempoScale sync effect.
+const LEARN_TEMPO_SCALE = 1.25;
+
 function randomAufAlg(puzzleId) {
   const order = U_TURN_ORDER[puzzleId];
   if (!order) return "";
@@ -333,12 +337,16 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   // tempoScale is ~1:1 with quarter-turns-per-second (a tempoScale of N means
   // a single quarter turn, whose base duration is 1000ms, takes 1000/N ms) —
-  // see cubing's defaultDurationForAmount. Kept in sync on both players
-  // whenever the desired speed changes, independent of whether visible
-  // turning is currently on (jumpToEnd() ignores it either way).
+  // see cubing's defaultDurationForAmount. Kept in sync whenever the desired
+  // speed changes, independent of whether visible turning is currently on
+  // (jumpToEnd() ignores it either way). The practice player follows the
+  // user's chosen speed; the reference player is pinned to LEARN_TEMPO_SCALE
+  // instead — at the practice speeds this app offers (5+ turns/sec), a full
+  // algorithm plays back too fast to actually watch, which defeats the
+  // point of a reference demo.
   useEffect(() => {
     if (practicePlayerRef.current) practicePlayerRef.current.tempoScale = turnsPerSecond;
-    if (learnPlayerRef.current) learnPlayerRef.current.tempoScale = turnsPerSecond;
+    if (learnPlayerRef.current) learnPlayerRef.current.tempoScale = LEARN_TEMPO_SCALE;
   }, [turnsPerSecond, practicePlayerRef, learnPlayerRef, kpuzzle]);
 
   // Animate a single applied move by appending it to the player's current
