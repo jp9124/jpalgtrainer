@@ -40,11 +40,11 @@ const cases = [
   { name: "Hedge", alg: "R' U L R' L' R R", group: "Last 3 Edges" },
   { name: "Clockwise Cycle", alg: "U R' L R' L' R R", group: "Last 3 Edges" },
   { name: "Counterclockwise Cycle", alg: "U R' R' L R L' R", group: "Last 3 Edges" },
+  { name: "Righty", alg: "y R U' R' y'", group: "Last 3 Edges" },
+  { name: "Lefty", alg: "R' U R", group: "Last 3 Edges" },
+  { name: "Sexy", alg: "y U' R U R' y'", group: "Last 3 Edges" },
+  { name: "Ugly", alg: "U R' U' R", group: "Last 3 Edges" },
   // Flipped Edges
-  { name: "Righty", alg: "y R U' R' y'", group: "Flipped Edges" },
-  { name: "Lefty", alg: "R' U R", group: "Flipped Edges" },
-  { name: "Sexy", alg: "y U' R U R' y'", group: "Flipped Edges" },
-  { name: "Ugly", alg: "U R' U' R", group: "Flipped Edges" },
   { name: "DR Flip", alg: "R' U' L' U' L2 R' L' R2", group: "Flipped Edges" },
   { name: "DL Flip", alg: "R' U R' L R L' R", group: "Flipped Edges" },
   { name: "DB Flip", alg: "R' L R' L' R U' R", group: "Flipped Edges" },
@@ -52,13 +52,27 @@ const cases = [
   // Polish Flip
   { name: "Right Polish Flip", alg: "R' L' U L R U' R' U R", group: "Polish Flip" },
   { name: "Left Polish Flip", alg: "U R' L' U L R U R' U' R", group: "Polish Flip" },
-  { name: "SUS", alg: "R' R' L R L' L' U' L R L R U' R' R' L R L' L'", group: "Polish Flip" },
+  { name: "SUS", alg: "R' R' L R L' L' U' L R", group: "Polish Flip" },
   { name: "Anti-SUS", alg: "R' L' U L L R' L' R R", group: "Polish Flip" },
   // Separated Bar
   { name: "Good Niky", alg: "R' L' U L R", group: "Separated Bar" },
   { name: "Good Sochi", alg: "R' L' U' L R", group: "Separated Bar" },
   { name: "Super Sledge", alg: "R' L' U L L R' L' R U' R", group: "Separated Bar" },
-  { name: "Super Hedge", alg: "R' U' L R' L' R R U' L L R' L' R L' U' R U' R'", group: "Separated Bar" },
+  { name: "Super Hedge", alg: "R' U' L R' L' R R", group: "Separated Bar" },
+  { name: "Bad Niky", alg: "R' U' L' U' L U R", group: "Separated Bar" },
+  { name: "Bad Sochi", alg: "U' R' U' L' U L U R", group: "Separated Bar" },
+  // Connected Bar
+  { name: "Right Spam", alg: "R' L' U L L R' L' R U R", group: "Connected Bar" },
+  { name: "Left Spam", alg: "R' U' L' U L U' R", group: "Connected Bar" },
+  { name: "Bad Sledge", alg: "R' U' R' L R L' L' U' L R", group: "Connected Bar" },
+  { name: "Bad Hedge", alg: "R' L' U' L U' R", group: "Connected Bar" },
+  // No Bar
+  { name: "Bad Sexy", alg: "R' L' U' L L R' L' R R", group: "No Bar" },
+  { name: "Bad Ugly", alg: "U' R' R' L R L' L' U L R", group: "No Bar" },
+  { name: "Bad Righty", alg: "R' U' L R' L' R U' R", group: "No Bar" },
+  { name: "Bad Lefty", alg: "R' U R' L R L' U R", group: "No Bar" },
+  { name: "Double Sexy", alg: "U' R' L R' L' R R U R' U' R", group: "No Bar" },
+  { name: "Double Ugly", alg: "R' U R U R' U' R", group: "No Bar" },
 ];
 
 export default {
