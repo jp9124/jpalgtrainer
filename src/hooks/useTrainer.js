@@ -47,20 +47,15 @@ function unscaledAlgDuration(algString) {
 // before scrambling into a case, so cases aren't always studied from the
 // same fixed color scheme. Built only from rotation tokens verified against
 // the real `cubing` engine (see the research behind this feature) — cube
-// puzzles get the standard 24-way x/y/z rotation group, but megaminx's
-// kpuzzle only accepts x2/y/y'/y2 (10 reachable orientations, not the full
-// 60 — no other axis is exposed; "Could not split X/Z into face names" for
-// anything else) and pyraminx only accepts y/y'/y2 (3 orientations, all
-// sharing the same "up" vertex; "Bad move x"/"Bad move z" otherwise). Not
-// true full color neutrality for those two, just the rotation variety the
-// engine actually exposes.
+// puzzles get the standard 24-way x/y/z rotation group, but pyraminx only
+// accepts y/y'/y2 (3 orientations, all sharing the same "up" vertex; "Bad
+// move x"/"Bad move z" otherwise). Not true full color neutrality for that
+// one, just the rotation variety the engine actually exposes.
 const CUBE_UP_SETUPS = ["", "x", "x2", "x'", "z", "z'"];
 const CUBE_SPINS = ["", "y", "y2", "y'"];
-const MEGAMINX_UP_SETUPS = ["", "x2"];
-const MEGAMINX_SPINS = ["", "y", "y2", "y2 y", "y'"];
 const PYRAMINX_SPINS = ["", "y", "y2"];
 
-const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
+const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "pyraminx"];
 
 function pick(options) {
   return options[Math.floor(Math.random() * options.length)];
@@ -72,8 +67,6 @@ function randomOrientationAlg(puzzleId) {
     case "3x3x3":
     case "5x5x5":
       return [pick(CUBE_UP_SETUPS), pick(CUBE_SPINS)].filter(Boolean).join(" ");
-    case "megaminx":
-      return [pick(MEGAMINX_UP_SETUPS), pick(MEGAMINX_SPINS)].filter(Boolean).join(" ");
     case "pyraminx":
       return pick(PYRAMINX_SPINS);
     default:
@@ -92,11 +85,20 @@ function randomOrientationAlg(puzzleId) {
 //
 // The order of U (how many distinct turns exist before it repeats back to
 // no-op) varies by puzzle — verified against the real engine, not assumed:
-// the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx/Skewb are
-// order 3 (their faces are triangular, no "double" turn), Megaminx is order
-// 5 (pentagonal faces). Square-1 has no U move at all (twist/slash only),
-// so it's simply absent from this map — random AUF isn't offered there.
-const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, megaminx: 5, pyraminx: 3, skewb: 3 };
+// the standard NxN cubes are order 4 (U/U2/U'), FTO/Pyraminx are order 3
+// (their faces are triangular, no "double" turn). Square-1 has no U move at
+// all (twist/slash only), so it's simply absent from this map — random AUF
+// isn't offered there. Still used for 5x5 to merge any naturally-occurring
+// consecutive U moves in a case's own alg text (see mergeUMoves) even though
+// random AUF itself is separately turned off there — see
+// RANDOM_AUF_DISABLED_PUZZLE_IDS.
+const U_TURN_ORDER = { "2x2x2": 4, "3x3x3": 4, "5x5x5": 4, fto: 3, pyraminx: 3 };
+
+// Puzzles with an ordinary U move (i.e. present in U_TURN_ORDER) where random
+// AUF is still turned off. 5x5's only builtin set (L2E) is practiced with
+// wide moves, not a face U turn, so folding extra U turns onto it doesn't
+// add anything worth practicing there.
+const RANDOM_AUF_DISABLED_PUZZLE_IDS = ["5x5x5"];
 
 // Square-1's x2/y2/z2 whole-puzzle rotations (see square1.js's controls):
 // real, animated moves on its canvas renderer, but not real cubing.js
@@ -138,6 +140,42 @@ function formatUAmount(amount, order) {
   const complement = order - normalized;
   if (normalized <= complement) return normalized === 1 ? "U" : `U${normalized}`;
   return complement === 1 ? "U'" : `U${complement}'`;
+}
+
+// "Random 3x3 stage" practice: before scrambling into a case, apply a random
+// outer-layer-only scramble first, so the rest of the cube sits in a
+// realistic unsolved state instead of the pristine solved cube these cases
+// are normally practiced against. Built for 5x5's L2E set specifically — in
+// a real reduction solve, the last two edges get fixed *during* edge
+// pairing, before the cube is ever solved down to a 3x3 state, so the
+// corners (and the other, already-paired edges) are however the original
+// scramble left them, not solved. Restricted to plain outer-layer turns
+// (U/D/L/R/F/B), never wide or inner-slice moves: those are exactly the
+// moves that turn a whole layer as one piece, which is what keeps a paired
+// edge's two wings moving together — a wide/slice move here could split a
+// pair apart, which no real solve would ever do at this stage.
+const RANDOM_STAGE_PUZZLE_IDS = ["5x5x5"];
+const OUTER_LAYER_AXIS = { U: "y", D: "y", L: "x", R: "x", F: "z", B: "z" };
+const OUTER_LAYER_FACES = Object.keys(OUTER_LAYER_AXIS);
+const MOVE_SUFFIXES = ["", "'", "2"];
+const RANDOM_STAGE_LENGTH = 25;
+
+// Avoids two consecutive turns on the same axis (U/D, L/R, or F/B) — the
+// same rule real scramble generators use, since back-to-back turns on one
+// axis can trivially cancel or combine into a single move, which would
+// leave this feature scrambling less than it looks like.
+function randomOuterLayerStageAlg() {
+  const moves = [];
+  let lastAxis = null;
+  for (let i = 0; i < RANDOM_STAGE_LENGTH; i++) {
+    let face;
+    do {
+      face = pick(OUTER_LAYER_FACES);
+    } while (OUTER_LAYER_AXIS[face] === lastAxis);
+    lastAxis = OUTER_LAYER_AXIS[face];
+    moves.push(face + pick(MOVE_SUFFIXES));
+  }
+  return moves.join(" ");
 }
 
 function mergeUMoves(algText, order) {
@@ -215,6 +253,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [turnsPerSecond, setTurnsPerSecond] = useState(initialPracticePrefs.turnsPerSecond);
   const [colorNeutralEnabled, setColorNeutralEnabled] = useState(initialPracticePrefs.colorNeutralEnabled);
   const [randomAufEnabled, setRandomAufEnabled] = useState(initialPracticePrefs.randomAufEnabled);
+  const [randomStageEnabled, setRandomStageEnabled] = useState(initialPracticePrefs.randomStageEnabled);
 
   // colorNeutralEnabled is a global preference (persisted independent of
   // puzzle, see loadPracticePrefs/savePracticePrefs), but only some puzzles
@@ -227,8 +266,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
 
   // Same shape of override again: randomAufEnabled is global, but only
   // puzzles with a U move (i.e. every one but Square-1) support it — see
-  // U_TURN_ORDER's source note.
-  const randomAufActive = randomAufEnabled && puzzleConfig.id in U_TURN_ORDER;
+  // U_TURN_ORDER's source note. 5x5 is further excluded even though it has
+  // a U move — see RANDOM_AUF_DISABLED_PUZZLE_IDS.
+  const randomAufActive =
+    randomAufEnabled && puzzleConfig.id in U_TURN_ORDER && !RANDOM_AUF_DISABLED_PUZZLE_IDS.includes(puzzleConfig.id);
+
+  // Same shape of override again: randomStageEnabled is global, but the
+  // feature only means anything on puzzles it's built for — see
+  // RANDOM_STAGE_PUZZLE_IDS's source note.
+  const randomStageActive = randomStageEnabled && RANDOM_STAGE_PUZZLE_IDS.includes(puzzleConfig.id);
 
   const [persistedStats, setPersistedStats] = useState(() => initialStorage.stats);
   const [persistedChecked, setPersistedChecked] = useState(() => initialStorage.checkedCases);
@@ -251,6 +297,13 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // The random AUF turns (possibly "") folded onto the front/back of the
   // current case's alg, kept for the same reset-reuse reason as above.
   const caseAufRef = useRef({ preAuf: "", postAuf: "" });
+  // The random-3x3-stage outer-layer scramble (possibly "") applied before
+  // the current case, kept for the same reset-reuse reason as rotationAlg/AUF.
+  const caseStageAlgRef = useRef("");
+  // Whether the current case's target is the plain solved state (mod
+  // rotationAlg) — false whenever stageAlg or c.setupAlg are in play, since
+  // those deliberately leave the target short of true-solved. See isSolved.
+  const targetIsPlainSolvedRef = useRef(true);
   const solveMovesRef = useRef([]);
   const lastCaseNameRef = useRef(null);
   const timerStartRef = useRef(0);
@@ -273,8 +326,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // when switching puzzles instead of resetting with the rest of this
   // puzzle-scoped state.
   useEffect(() => {
-    savePracticePrefs({ orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled });
-  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled]);
+    savePracticePrefs({
+      orderedEnabled,
+      visibleTurningEnabled,
+      turnsPerSecond,
+      colorNeutralEnabled,
+      randomAufEnabled,
+      randomStageEnabled,
+    });
+  }, [orderedEnabled, visibleTurningEnabled, turnsPerSecond, colorNeutralEnabled, randomAufEnabled, randomStageEnabled]);
 
   // Sets an explicit list of case names to a given checked value in one
   // atomic update — used for toggling a single case, a whole group of
@@ -378,16 +438,25 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // wrongly call that "not solved". cubing.js has a real, tested check for
   // this (KPattern.experimentalIsSolved({ ignorePuzzleOrientation: true })),
   // but it only works for plain NxNxN cubes (2x2x2/3x3x3/5x5x5) — verified
-  // it throws "not supported" for FTO/Megaminx/Pyraminx/Skewb/Square-1, none
-  // of which expose the rotation moves needed to build an equivalent
+  // it throws "not supported" for FTO/Pyraminx/Square-1, none of which
+  // expose the rotation moves needed to build an equivalent
   // ourselves, so those puzzles keep the exact-orientation check — but
   // against targetPatternRef (normally solvedPattern, but a specific rotated
   // pattern when color-neutral picked an orientation for this case) rather
   // than solvedPattern directly, so a color-neutral case correctly reads as
   // solved once it's back to ITS rotated target, not the canonical one.
+  //
+  // That engine shortcut only ever means "solved" in the true, whole-cube
+  // sense (mod orientation) — it has no notion of a target short of that.
+  // Cases whose target genuinely isn't true-solved (stageAlg's deliberately
+  // still-scrambled corners, or a setupAlg precondition like FTO's 1LP) must
+  // always go through the isIdentical(targetPatternRef) branch instead,
+  // tracked via targetIsPlainSolvedRef — verified against the real engine
+  // that skipping this for NxNxN cubes leaves experimentalIsSolved
+  // permanently false even once the case is correctly solved.
   const isSolved = useCallback(
     (pattern) => {
-      if (typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
+      if (targetIsPlainSolvedRef.current && typeof kpuzzle?.definition?.experimentalIsPatternSolved === "function") {
         return pattern.experimentalIsSolved({ ignorePuzzleOrientation: true, ignoreCenterOrientation: false });
       }
       return pattern.isIdentical(targetPatternRef.current ?? solvedPattern);
@@ -414,7 +483,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   }, [activeSet, checkedCaseNames, orderedEnabled]);
 
   const loadPracticeCase = useCallback(
-    (c, { rotationAlg = "", preAuf = "", postAuf = "" } = {}) => {
+    (c, { rotationAlg = "", preAuf = "", postAuf = "", stageAlg = "" } = {}) => {
       if (!kpuzzle || !solvedPattern) return;
       setCurrentCase(c);
       setRevealed(false);
@@ -422,6 +491,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       solveMovesRef.current = [];
       caseRotationAlgRef.current = rotationAlg;
       caseAufRef.current = { preAuf, postAuf };
+      caseStageAlgRef.current = stageAlg;
       stopTimer();
 
       setDisplayAlg(
@@ -454,12 +524,20 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // this case) goes first: rotate the solved reference, then scramble
       // relative to THAT — so the case's alg text and solved-check both
       // stay correct without needing to touch c.alg at all (see
-      // randomOrientationAlg's source note for why this works).
-      const fullSetupAlg = [rotationAlg, c.setupAlg, setupAlg].filter(Boolean).join(" ");
+      // randomOrientationAlg's source note for why this works). stageAlg
+      // (empty unless random-3x3-stage picked an outer-layer scramble for
+      // this case) works the same way as c.setupAlg below it — a fixed
+      // precondition applied before the case's own inverted alg, and folded
+      // into what counts as "solved" too, so the target is "however the
+      // stage scramble left the rest of the cube, with these two edges now
+      // fixed" rather than the fully solved cube (see
+      // randomOuterLayerStageAlg's source note).
+      const fullSetupAlg = [rotationAlg, stageAlg, c.setupAlg, setupAlg].filter(Boolean).join(" ");
       scrambleAlgRef.current = fullSetupAlg;
       scrambledPatternRef.current = solvedPattern.applyAlg(fullSetupAlg);
-      const targetSetupAlg = [rotationAlg, c.setupAlg].filter(Boolean).join(" ");
+      const targetSetupAlg = [rotationAlg, stageAlg, c.setupAlg].filter(Boolean).join(" ");
       targetPatternRef.current = targetSetupAlg ? solvedPattern.applyAlg(targetSetupAlg) : solvedPattern;
+      targetIsPlainSolvedRef.current = !stageAlg && !c.setupAlg;
 
       setTimerLabel("0.00");
       setTimerStatus("idle");
@@ -484,6 +562,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     solveMovesRef.current = [];
     caseRotationAlgRef.current = "";
     caseAufRef.current = { preAuf: "", postAuf: "" };
+    caseStageAlgRef.current = "";
+    targetIsPlainSolvedRef.current = true;
     stopTimer();
 
     scrambleAlgRef.current = "";
@@ -509,8 +589,9 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       rotationAlg: colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "",
       preAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
       postAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+      stageAlg: randomStageActive ? randomOuterLayerStageAlg() : "",
     });
-  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, puzzleConfig]);
+  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, randomStageActive, puzzleConfig]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -614,6 +695,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         rotationAlg: caseRotationAlgRef.current,
         preAuf: caseAufRef.current.preAuf,
         postAuf: caseAufRef.current.postAuf,
+        stageAlg: caseStageAlgRef.current,
       });
     } else loadFreePlay();
   }, [currentCase, loadPracticeCase, loadFreePlay]);
@@ -675,7 +757,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // would animate the scramble (the inverted alg) before the actual solve,
   // which looks like the cube solving itself then re-scrambling.
   //
-  // With visible turning on, real <twisty-player> instances hand the whole
+  // The reference cube always turns visibly here, independent of the
+  // practice-side "visible turning" toggle (see LEARN_TEMPO_SCALE, pinned
+  // the same way) — an instant jump to the solved state defeats the point
+  // of a reference demo. Real <twisty-player> instances hand the whole
   // "scramble + solve" alg to the player's native play() — which respects
   // tempoScale and turns smoothly — but positioned to *start* partway
   // through, right where the solve begins, via the numeric `timestamp`
@@ -685,42 +770,28 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // practice cube), doesn't work here: cubing's own implementation of that
   // method is an unfinished stub (its source literally reads "TODO: Animate
   // the new move"), so calls fired in a tight loop collapse into one jump
-  // with only the last move visibly turning — which is exactly the bug this
-  // replaced. Square-1's canvas player is the one exception: its
-  // experimentalAddMove is this app's own hand-rolled, genuinely-animated
-  // implementation (see square1Renderer.js) and it has no `timestamp`
-  // setter to offset into, so it keeps using the per-move loop.
-  //
-  // With visible turning off, step through the moves one at a time, each
-  // step an instant jump to "scramble + moves done so far".
+  // with only the last move visibly turning. Square-1's canvas player is
+  // the one exception: its experimentalAddMove is this app's own
+  // hand-rolled, genuinely-animated implementation (see square1Renderer.js)
+  // and it has no `timestamp` setter to offset into, so it uses the
+  // per-move loop instead.
   const playLearnAlgorithm = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
     const scrambleAlg = learnScrambleAlgFor(learnCase);
-    const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
 
     player.alg = scrambleAlg;
     player.jumpToEnd();
 
-    if (visibleTurningEnabled) {
-      if (puzzleConfig.id === "square1") {
-        moves.forEach((move) => player.experimentalAddMove(move));
-      } else {
-        player.alg = `${scrambleAlg} ${learnCase.alg}`;
-        player.timestamp = unscaledAlgDuration(scrambleAlg);
-        player.play();
-      }
-      return;
+    if (puzzleConfig.id === "square1") {
+      const moves = learnCase.alg.trim().split(/\s+/).filter(Boolean);
+      moves.forEach((move) => player.experimentalAddMove(move));
+    } else {
+      player.alg = `${scrambleAlg} ${learnCase.alg}`;
+      player.timestamp = unscaledAlgDuration(scrambleAlg);
+      player.play();
     }
-
-    moves.forEach((_, i) => {
-      setTimeout(() => {
-        const doneMoves = moves.slice(0, i + 1).join(" ");
-        player.alg = `${scrambleAlg} ${doneMoves}`;
-        player.jumpToEnd();
-      }, (i + 1) * 400);
-    });
-  }, [learnPlayerRef, learnCase, visibleTurningEnabled, puzzleConfig]);
+  }, [learnPlayerRef, learnCase, puzzleConfig]);
 
   const learnJumpToStart = useCallback(() => {
     if (learnCase) showLearnCase(learnCase);
@@ -892,6 +963,8 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     setColorNeutralEnabled,
     randomAufEnabled,
     setRandomAufEnabled,
+    randomStageEnabled,
+    setRandomStageEnabled,
 
     customSetText,
     setCustomSetText,

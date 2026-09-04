@@ -3,11 +3,10 @@ import ml4eRightSet from "./algs/pyraminxMl4eRight";
 import ml4eLeftSet from "./algs/pyraminxMl4eLeft";
 
 // No official cubing.js keyboard layout exists for Pyraminx, so this reuses
-// the same physical key positions as FTO/Megaminx for the matching face
-// letters (U, L, R, B), for muscle-memory consistency across puzzles in
-// this app. Tip moves are intentionally omitted — no published Pyraminx
-// algorithm ever turns a tip, since tips have no orientation/permutation
-// constraint.
+// the same physical key positions as FTO for the matching face letters (U,
+// L, R, B), for muscle-memory consistency across puzzles in this app. Tip
+// moves are intentionally omitted — no published Pyraminx algorithm ever
+// turns a tip, since tips have no orientation/permutation constraint.
 const controls = [
   { label: "U", move: "U", code: "KeyJ", keyLabel: "J" },
   { label: "U'", move: "U'", code: "KeyF", keyLabel: "F" },

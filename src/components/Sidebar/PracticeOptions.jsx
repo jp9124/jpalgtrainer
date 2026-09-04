@@ -2,16 +2,22 @@ import { useTrainerContext } from "../../context/TrainerContext.jsx";
 import styles from "./Sidebar.module.css";
 
 // Puzzles color-neutral mode actually works on — it needs whole-puzzle
-// rotation moves that only these five expose (see randomOrientationAlg's
+// rotation moves that only these four expose (see randomOrientationAlg's
 // source note in useTrainer.js); it's simply hidden everywhere else rather
 // than shown disabled, since it doesn't apply there at all.
-const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "megaminx", "pyraminx"];
-const COLOR_NEUTRAL_LIMITED = ["megaminx", "pyraminx"];
+const COLOR_NEUTRAL_SUPPORTED = ["2x2x2", "3x3x3", "5x5x5", "pyraminx"];
+const COLOR_NEUTRAL_LIMITED = ["pyraminx"];
 
-// Every puzzle with a U move supports random AUF — everything except
-// Square-1, whose moves are twist/slash pairs with no discrete U turn at
-// all (see U_TURN_ORDER's source note in useTrainer.js).
-const RANDOM_AUF_UNSUPPORTED = ["square1"];
+// Every puzzle with a U move supports random AUF — except Square-1, whose
+// moves are twist/slash pairs with no discrete U turn at all (see
+// U_TURN_ORDER's source note in useTrainer.js), and 5x5, whose only builtin
+// set (L2E) is practiced with wide moves rather than U (see
+// RANDOM_AUF_DISABLED_PUZZLE_IDS's source note in useTrainer.js).
+const RANDOM_AUF_UNSUPPORTED = ["square1", "5x5x5"];
+
+// Puzzles the "random 3x3 stage" option applies to — see
+// RANDOM_STAGE_PUZZLE_IDS's source note in useTrainer.js.
+const RANDOM_STAGE_SUPPORTED = ["5x5x5"];
 
 const TURN_SPEED_OPTIONS = [5, 10, 20];
 
@@ -27,6 +33,8 @@ export default function PracticeOptions() {
     setColorNeutralEnabled,
     randomAufEnabled,
     setRandomAufEnabled,
+    randomStageEnabled,
+    setRandomStageEnabled,
     puzzleConfig,
   } = useTrainerContext();
 
@@ -34,6 +42,8 @@ export default function PracticeOptions() {
   const colorNeutralLimited = COLOR_NEUTRAL_LIMITED.includes(puzzleConfig.id);
 
   const randomAufSupported = !RANDOM_AUF_UNSUPPORTED.includes(puzzleConfig.id);
+
+  const randomStageSupported = RANDOM_STAGE_SUPPORTED.includes(puzzleConfig.id);
 
   return (
     <section>
@@ -72,6 +82,18 @@ export default function PracticeOptions() {
             checked={randomAufEnabled}
             title="Adds a random U turn before and after each case's algorithm, so you're not always solving from the same U alignment"
             onChange={(e) => setRandomAufEnabled(e.target.checked)}
+          />
+        </div>
+      )}
+      {randomStageSupported && (
+        <div className={styles.toggleRow}>
+          <label htmlFor="randomStageToggle">Random 3x3 stage</label>
+          <input
+            id="randomStageToggle"
+            type="checkbox"
+            checked={randomStageEnabled}
+            title="Scrambles the outer layers with a random 3x3-style sequence before each case, so the rest of the cube isn't sitting solved the way it never would be mid-reduction"
+            onChange={(e) => setRandomStageEnabled(e.target.checked)}
           />
         </div>
       )}

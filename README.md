@@ -1,18 +1,17 @@
-# WCA Alg Trainer (React)
+# Jung Park's Alg Trainer (React)
 
 ## Link: https://jpalgtrainer.netlify.app/ 
 
 A React algorithm trainer for twisty puzzles, modeled after
 [tao-yu/Alg-Trainer](https://github.com/tao-yu/Alg-Trainer). Started with FTO
-(Face-Turning Octahedron); now also covers Megaminx, Pyraminx, Skewb, and
-Square-1.
+(Face-Turning Octahedron); now also covers Pyraminx and Square-1.
 
 ## Running it
 
 Requires [Node.js](https://nodejs.org/) (18+).
 
 ```
-npm install
+npm installvscode-webview://0p18vgsmcj5j03986ftpf23h97ijjrrhdkrrvpr7doiobhp9a0s7/README.md#L1
 npm run dev
 ```
 
@@ -31,7 +30,7 @@ src/
   App.jsx / App.css               top-level layout
   index.css                       CSS variables, reset, base element styles
   puzzles/                        one config file per puzzle
-    fto.js, megaminx.js, pyraminx.js, skewb.js, square1.js
+    fto.js, pyraminx.js, square1.js
     index.js                      aggregates them into PUZZLES
   lib/storage.js                  localStorage read/write helpers (namespaced per puzzle)
   hooks/
@@ -76,11 +75,11 @@ Square-1's `"square1"`) needs its own control component, wired into `PracticeAre
 
 ## Keyboard layout
 
-FTO and Megaminx reuse their **official cubing.js/Twizzle keyboard layouts**. Pyraminx and
-Skewb have no official layout, so they reuse the same physical key positions for their
-matching face letters (U/L/R/B), for muscle-memory consistency across puzzles:
+FTO reuses its **official cubing.js/Twizzle keyboard layout**. Pyraminx has no official
+layout, so it reuses the same physical key positions for its matching face letters
+(U/L/R/B), for muscle-memory consistency across puzzles:
 
-I/K=R, W/O=B, S/L=D (FTO) or FR (Megaminx), D/E=L, J/F=U, H/G=F, Q/Z=BL, ./P=BR (FTO only)
+I/K=R, W/O=B, S/L=D (FTO), D/E=L, J/F=U, H/G=F, Q/Z=BL, ./P=BR (FTO only)
 
 Square-1 doesn't turn like the others — it gets its own click-only control panel (top/bottom
 twist amounts + a slash button) instead of a keyboard layout.
@@ -102,22 +101,8 @@ collection of named algorithms actually verified against a public source, not an
   by this project's user as a screenshot, split into three groups by how many R U(') triggers
   each algorithm chains together (1/2/3 Triggers), matching the line breaks shown per case in
   the source image. **1L3T** (`src/puzzles/algs/fto1l3t.js`) is a placeholder with no cases yet.
-- **Megaminx** — **OLL** (`src/puzzles/algs/megaminxOll.js`, 178 cases) and **PLL**
-  (`src/puzzles/algs/megaminxPll.js`, 151 cases), supplied by this project's user as
-  `ollalgs.js`/`pllalgs.js`. Grouped by the source's own numbered/lettered groups (e.g. OLL
-  "Group 1", PLL "Group C"); a group with more than 6 cases is split in half (e.g. "Group Ca"/
-  "Group Cb"). The single empty "solved" PLL entry is omitted — not a practicable case. Every
-  case was parsed and round-trip-verified against the real `cubing` engine. Three of the
-  source's move families (BR/BL/DR) turned out to be a y-rotation conjugate of a face this app
-  already has a key for (e.g. BR = y R y') and were rewritten to reuse it, each rewrite
-  verified to produce the identical resulting pattern to the original token; bR/dR had no such
-  equivalent, so those got two dedicated keys instead (see the source note in
-  `algs/megaminxOll.js` for detail). This replaces the previous small "Corner Orientation"/"Edge
-  Permutation" sets, which just pointed at reusing 3x3's own Sune/T-perm on Megaminx's last
-  layer (per SpeedCubeShop's guide) — still true, but superseded by full OLL/PLL coverage.
 - **Pyraminx** — the Speedsolving Wiki's Pyraminx algorithms page (ELL and Last-Layer
   sections).
-- **Skewb** — Sarah's Cubing Site "Speedskewbin" guide, read directly from the source PDF.
 - **Square-1** — **EO** (`src/puzzles/algs/square1EO.js`, 7 cases: the non-trivial counts of
   misoriented top-layer edges), from SpeedCubeDB. Real Square-1 algorithms are dense numeric
   sequences, and every source consulted while building this disagreed on the exact digits for
@@ -127,7 +112,13 @@ collection of named algorithms actually verified against a public source, not an
   (`src/puzzles/algs/square1Co.js`, 6 cases) and **EP** (`src/puzzles/algs/square1Ep.js`, 51
   cases across 6 groups), supplied whole by this project's user from a private Google Sheet —
   see each file's own source note for how its twist notation and repeated-name cases were
-  handled. Add more via the Custom Set editor once you have a source you trust.
+  handled. Also **Cube Shape** (`src/puzzles/algs/square1CubeShape.js`, 169 cases across 7
+  groups), from cubingapp.com — one case per named shape-pair (e.g. "Kite / Kite"), grouped by
+  how many slash moves the fix takes ("1 Slash" through "7 Slashes"); where the source listed
+  more than one algorithm for a case, only the first-listed is kept. Also **CP**
+  (`src/puzzles/algs/square1Cp.js`, 8 cases across 3 groups), also from cubingapp.com — cases
+  named by each layer's corner-pair state ("Adj"/"Opp"/"Solved"), grouped by the top layer's
+  state. Add more via the Custom Set editor once you have a source you trust.
 - **2x2** — **CLL, EG1, EG2, LEG1** (`src/puzzles/algs/cube2x2Cll.js`, 40 cases each, 160 total),
   supplied by this project's user as `2x2algs.txt`. Each set is grouped by its 7 named shapes
   (S/AS/Pi/U/L/T/H), numbered sequentially within the group (e.g. S1..S6); H has only 4 cases
@@ -148,8 +139,8 @@ collection of named algorithms actually verified against a public source, not an
   for a case (`/`-separated), only the first is kept. Every one of the 472 algorithms was
   parsed and round-trip-verified against the real `cubing` engine (applying the case's alg,
   then its inverse, returns to solved) before being included.
-- **5x5** — **L2E** (Last Two Edges, `src/puzzles/algs/cube5x5L2e.js`), split into "No Parity" (4 cases)
-  and "Parity" (8 cases), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
+- **5x5** — **L2E** (Last Two Edges, `src/puzzles/algs/cube5x5L2e.js`, 12 cases grouped into
+  "No Parity" (4 cases) and "Parity" (8 cases)), from CubeSkills' "5x5 L2E Algorithms" PDF, supplied by this project's
   user. The PDF shows a primary (bold) algorithm per case and, for some No Parity cases, a
   bolded alternative-angle algorithm below it — only the primary one is kept. Four cases used
   3Rw/3Lw (a deep, 3-layer wide turn with no key on this app's layout); rather than inventing

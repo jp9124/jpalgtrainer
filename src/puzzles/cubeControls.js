@@ -1,9 +1,9 @@
 // Shared keyboard layout for the plain NxNxN cubes (2x2/3x3/5x5), matching
 // a real published `defaultKeymaps` layout (a `KeyCombo`-based binding list
 // used by an existing cubing web app) rather than an invented one — unlike
-// FTO/Megaminx's official cubing.js layout, this isn't from cubing.js
-// itself, but it's still a real, external, previously-used layout rather
-// than picked by this project.
+// FTO's official cubing.js layout, this isn't from cubing.js itself, but
+// it's still a real, external, previously-used layout rather than picked by
+// this project.
 const baseFaceControls = [
   { label: "U", move: "U", code: "KeyJ", keyLabel: "J" },
   { label: "U'", move: "U'", code: "KeyF", keyLabel: "F" },

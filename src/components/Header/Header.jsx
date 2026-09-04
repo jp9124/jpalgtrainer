@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.title}>
-        <h1>WCA Alg Trainer</h1>
+        <h1>Jung Park's Alg Trainer</h1>
         <small>(In Beta)</small>
       </div>
       <div className={styles.controls}>

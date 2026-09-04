@@ -19,6 +19,7 @@ export function loadPracticePrefs() {
       turnsPerSecond: parsed?.turnsPerSecond ?? 10,
       colorNeutralEnabled: parsed?.colorNeutralEnabled ?? false,
       randomAufEnabled: parsed?.randomAufEnabled ?? false,
+      randomStageEnabled: parsed?.randomStageEnabled ?? false,
     };
   } catch {
     return {
@@ -27,6 +28,7 @@ export function loadPracticePrefs() {
       turnsPerSecond: 10,
       colorNeutralEnabled: false,
       randomAufEnabled: false,
+      randomStageEnabled: false,
     };
   }
 }
