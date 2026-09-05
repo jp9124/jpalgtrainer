@@ -306,6 +306,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const targetIsPlainSolvedRef = useRef(true);
   const solveMovesRef = useRef([]);
   const lastCaseNameRef = useRef(null);
+  // Back/forward history of practice attempts actually loaded (via Enter or
+  // ArrowRight), so ArrowLeft can step back to whatever was practiced
+  // before even when picks aren't in list order (random mode, or a
+  // scattered checked selection) — the same model as browser navigation.
+  // Each entry also stores that attempt's random modifiers (color-neutral
+  // orientation, random AUF, random 3x3 stage), so going back restores the
+  // exact same attempt instead of rerolling it.
+  const caseHistoryRef = useRef([]);
+  const caseHistoryIndexRef = useRef(-1);
   const timerStartRef = useRef(0);
   const timerIntervalRef = useRef(null);
   const initialCustomSetTextRef = useRef(initialStorage.customSetText);
@@ -578,20 +587,37 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     syncPracticePlayer();
   }, [solvedPattern, stopTimer, syncPracticePlayer]);
 
+  // Rolls this attempt's random modifiers once and records them as a new
+  // history entry (truncating any "forward" entries past the current
+  // position, same as navigating to a new page while back in browser
+  // history) — used whenever a genuinely new case is picked, whether from
+  // Enter or from ArrowRight running past the end of history.
+  const pushCaseHistoryEntry = useCallback(
+    (c) => {
+      const entry = {
+        case: c,
+        rotationAlg: colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "",
+        preAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+        postAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
+        stageAlg: randomStageActive ? randomOuterLayerStageAlg() : "",
+      };
+      caseHistoryRef.current = [...caseHistoryRef.current.slice(0, caseHistoryIndexRef.current + 1), entry];
+      caseHistoryIndexRef.current = caseHistoryRef.current.length - 1;
+      return entry;
+    },
+    [colorNeutralActive, randomAufActive, randomStageActive, puzzleConfig],
+  );
+
   const loadNewPracticeCase = useCallback(() => {
     const c = pickNextCase();
     if (!c) {
       loadFreePlay();
       return;
     }
+    const entry = pushCaseHistoryEntry(c);
     lastCaseNameRef.current = c.name;
-    loadPracticeCase(c, {
-      rotationAlg: colorNeutralActive ? randomOrientationAlg(puzzleConfig.id) : "",
-      preAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
-      postAuf: randomAufActive ? randomAufAlg(puzzleConfig.id) : "",
-      stageAlg: randomStageActive ? randomOuterLayerStageAlg() : "",
-    });
-  }, [pickNextCase, loadPracticeCase, loadFreePlay, colorNeutralActive, randomAufActive, randomStageActive, puzzleConfig]);
+    loadPracticeCase(c, entry);
+  }, [pickNextCase, loadPracticeCase, loadFreePlay, pushCaseHistoryEntry]);
 
   const recordResult = useCallback(
     (c, elapsed) => {
@@ -797,6 +823,44 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     if (learnCase) showLearnCase(learnCase);
   }, [learnCase, showLearnCase]);
 
+  // Applies a case-history entry to both panels at once: the Practice cube
+  // (a fresh attempt reusing that entry's stored modifiers, like Reset Case
+  // reuses its refs) and the reference cube (like a sidebar click) — used by
+  // ArrowLeft/ArrowRight so both stay in sync as they step through history.
+  const applyCaseHistoryEntry = useCallback(
+    (entry) => {
+      lastCaseNameRef.current = entry.case.name;
+      loadPracticeCase(entry.case, entry);
+      showLearnCase(entry.case);
+    },
+    [loadPracticeCase, showLearnCase],
+  );
+
+  // ArrowLeft: step back to whatever was practiced before, per
+  // caseHistoryRef — not activeSet.cases order, since Enter's picks (random
+  // mode, or a scattered checked selection) aren't necessarily in that
+  // order. No-ops at the start of history.
+  const goToPreviousCase = useCallback(() => {
+    if (caseHistoryIndexRef.current <= 0) return;
+    caseHistoryIndexRef.current -= 1;
+    applyCaseHistoryEntry(caseHistoryRef.current[caseHistoryIndexRef.current]);
+  }, [applyCaseHistoryEntry]);
+
+  // ArrowRight: redo forward through caseHistoryRef if ArrowLeft moved back
+  // earlier; once at its end (the common case — most ArrowRight presses
+  // aren't preceded by an ArrowLeft), behaves like Enter, picking and
+  // recording a genuinely new case instead of wrapping.
+  const goToNextCase = useCallback(() => {
+    if (caseHistoryIndexRef.current < caseHistoryRef.current.length - 1) {
+      caseHistoryIndexRef.current += 1;
+      applyCaseHistoryEntry(caseHistoryRef.current[caseHistoryIndexRef.current]);
+      return;
+    }
+    const c = pickNextCase();
+    if (!c) return;
+    applyCaseHistoryEntry(pushCaseHistoryEntry(c));
+  }, [applyCaseHistoryEntry, pickNextCase, pushCaseHistoryEntry]);
+
   const learnJumpToEnd = useCallback(() => {
     const player = learnPlayerRef.current;
     if (!player || !learnCase) return;
@@ -813,6 +877,11 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   // panels are always visible, so both always need something to show.
   useEffect(() => {
     if (!kpuzzle) return;
+    // A new set means its cases have nothing to do with whatever history
+    // came before — start ArrowLeft/ArrowRight fresh rather than letting
+    // them step back into a previous set's cases.
+    caseHistoryRef.current = [];
+    caseHistoryIndexRef.current = -1;
     if (!activeSet.cases.length) {
       setLearnCase(null);
       setCurrentCase(null);
@@ -906,6 +975,16 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         resetCase();
         return;
       }
+      if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        goToPreviousCase();
+        return;
+      }
+      if (e.code === "ArrowRight") {
+        e.preventDefault();
+        goToNextCase();
+        return;
+      }
 
       const move = (e.shiftKey && keyToMove[`shift+${e.code}`]) || keyToMove[e.code];
       if (move) {
@@ -915,7 +994,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [keyToMove, applyMove, revealAlg, loadNewPracticeCase, resetCase]);
+  }, [keyToMove, applyMove, revealAlg, loadNewPracticeCase, resetCase, goToPreviousCase, goToNextCase]);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
 
