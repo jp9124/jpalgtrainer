@@ -8,21 +8,21 @@ const source = "Supplied by this project's user as a screenshot";
 
 const cases = [
   // 1 Trigger
-  { name: "Case 1", alg: "R U R'", group: "1 Trigger" },
-  { name: "Case 2", alg: "R U' R'", group: "1 Trigger" },
+  { name: "Case 1", alg: "(R U R')", group: "1 Trigger" },
+  { name: "Case 2", alg: "(R U' R')", group: "1 Trigger" },
   // 2 Triggers
-  { name: "Case 3", alg: "R U' R' U' R U R'", group: "2 Triggers" },
-  { name: "Case 4", alg: "R U R' U R U' R'", group: "2 Triggers" },
-  { name: "Case 5", alg: "R U' R' U R U R'", group: "2 Triggers" },
-  { name: "Case 6", alg: "R U R' U' R U' R'", group: "2 Triggers" },
-  { name: "Case 7", alg: "R U R' U R U R'", group: "2 Triggers" },
-  { name: "Case 8", alg: "R U R' U' R U R'", group: "2 Triggers" },
-  { name: "Case 9", alg: "R U' R' U R U' R'", group: "2 Triggers" },
+  { name: "Case 3", alg: "(R U' R') U' (R U R')", group: "2 Triggers" },
+  { name: "Case 4", alg: "(R U R') U (R U' R')", group: "2 Triggers" },
+  { name: "Case 5", alg: "(R U' R') U (R U R')", group: "2 Triggers" },
+  { name: "Case 6", alg: "(R U R') U' (R U' R')", group: "2 Triggers" },
+  { name: "Case 7", alg: "(R U R') U (R U R')", group: "2 Triggers" },
+  { name: "Case 8", alg: "(R U R') U' (R U R')", group: "2 Triggers" },
+  { name: "Case 9", alg: "(R U' R') U (R U' R')", group: "2 Triggers" },
   // 3 Triggers
-  { name: "Case 10", alg: "R U' R' U R U' R' U' R U R'", group: "3 Triggers" },
-  { name: "Case 11", alg: "R U R' U' R U' R' U R U R'", group: "3 Triggers" },
-  { name: "Case 12", alg: "R U R' U' R U' R' U R U' R'", group: "3 Triggers" },
-  { name: "Case 13", alg: "R U R' U' R U R' U' R U' R'", group: "3 Triggers" },
+  { name: "Case 10", alg: "(R U' R') U (R U' R') U' (R U R')", group: "3 Triggers" },
+  { name: "Case 11", alg: "(R U R') U' (R U' R') U (R U R')", group: "3 Triggers" },
+  { name: "Case 12", alg: "(R U R') U' (R U' R') U (R U' R')", group: "3 Triggers" },
+  { name: "Case 13", alg: "(R U R') U' (R U R') U' (R U' R')", group: "3 Triggers" },
 ];
 
 export default {

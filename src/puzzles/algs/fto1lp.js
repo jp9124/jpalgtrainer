@@ -29,17 +29,17 @@
 // its alg IS H, so prepending H there cancels out and leaves nothing to
 // scramble — round-trip-verified to break down exactly this way.
 const cases = [
-  { name: "Case 1", alg: "R B' R' B", group: "No Flipped Centers", setupAlg: "R B' R' B" },
-  { name: "Case 2", alg: "R B' R' B U' R B' R' B U Uv", group: "No Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 3", alg: "U' B' R B R' U'", group: "1 Flipped Center", setupAlg: "R B' R' B" },
-  { name: "Case 4a", alg: "U R' L R L' U Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
-  { name: "Case 4b", alg: "U' L R' L' R U' Uv'", group: "1 Flipped Center", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 4c", alg: "U L R' L' R U R' L R L' U' Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
-  { name: "Case 5", alg: "L R' L' R U' R' L R L' U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 6a", alg: "U' R' L R L' U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 6b", alg: "U L R' L' R U' Uv", group: "2 Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 7", alg: "L R' L' R U' L R' L' R U' R' L R L' U Uv", group: "3 Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 8", alg: "R B' R' B U R B' R' B U", group: "3 Flipped Centers", setupAlg: "R B' R' B" },
+  { name: "Case 1", alg: "(R B' R' B)", group: "No Flipped Centers", setupAlg: "R B' R' B" },
+  { name: "Case 2", alg: "(R B' R' B) U' (R B' R' B) U Uv", group: "No Flipped Centers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 3", alg: "U' (B' R B R') U'", group: "1 Flipped Center", setupAlg: "R B' R' B" },
+  { name: "Case 4a", alg: "U (R' L R L') U Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
+  { name: "Case 4b", alg: "U' (L R' L' R) U' Uv'", group: "1 Flipped Center", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 4c", alg: "U (L R' L' R) U (R' L R L') U' Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
+  { name: "Case 5", alg: "(L R' L' R) U' (R' L R L') U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 6a", alg: "U' (R' L R L') U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 6b", alg: "U (L R' L' R) U' Uv", group: "2 Flipped Centers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 7", alg: "(L R' L' R) U' (L R' L' R) U' (R' L R L') U Uv", group: "3 Flipped Centers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 8", alg: "(R B' R' B) U (R B' R' B) U", group: "3 Flipped Centers", setupAlg: "R B' R' B" },
 ];
 
 export default {
