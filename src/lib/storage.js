@@ -60,9 +60,10 @@ export function loadStorage(puzzleId) {
       stats: parsed?.stats ?? {},
       customSetText: parsed?.customSetText ?? "",
       checkedCases: parsed?.checkedCases ?? {},
+      activeSetId: parsed?.activeSetId ?? null,
     };
   } catch {
-    return { stats: {}, customSetText: "", checkedCases: {} };
+    return { stats: {}, customSetText: "", checkedCases: {}, activeSetId: null };
   }
 }
 
