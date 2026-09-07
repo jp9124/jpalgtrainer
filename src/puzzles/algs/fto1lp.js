@@ -16,8 +16,8 @@
 // Grouped by number of H/S trigger applications in the alg below — what the
 // source itself calls a "flip" (its "Sequence of flips" column; e.g. case
 // 7's comment "three flips away from a completed PF" is 3 uses of S/S').
-// This gives 3 groups (1/2/3 flips), not 4 — a 4th ("0 flips") would only
-// ever contain the already-solved case, which isn't included here.
+// This gives 3 groups (1/2/3 triggers), not 4 — a 4th ("0 triggers") would
+// only ever contain the already-solved case, which isn't included here.
 //
 // `setupAlg: "R B' R' B"` (= H) on every case but Case 1 matches the
 // source's own footnote: "To set up the cases from a completely solved
@@ -29,17 +29,17 @@
 // its alg IS H, so prepending H there cancels out and leaves nothing to
 // scramble — round-trip-verified to break down exactly this way.
 const cases = [
-  { name: "Case 1", alg: "(R B' R' B)", group: "No Flipped Centers", setupAlg: "R B' R' B" },
-  { name: "Case 2", alg: "(R B' R' B) U' (R B' R' B) U Uv", group: "No Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 3", alg: "U' (B' R B R') U'", group: "1 Flipped Center", setupAlg: "R B' R' B" },
-  { name: "Case 4a", alg: "U (R' L R L') U Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
-  { name: "Case 4b", alg: "U' (L R' L' R) U' Uv'", group: "1 Flipped Center", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 4c", alg: "U (L R' L' R) U (R' L R L') U' Uv", group: "1 Flipped Center", setupAlg: "Uv R B' R' B" },
-  { name: "Case 5", alg: "(L R' L' R) U' (R' L R L') U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 6a", alg: "U' (R' L R L') U Uv'", group: "2 Flipped Centers", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 6b", alg: "U (L R' L' R) U' Uv", group: "2 Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 7", alg: "(L R' L' R) U' (L R' L' R) U' (R' L R L') U Uv", group: "3 Flipped Centers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 8", alg: "(R B' R' B) U (R B' R' B) U", group: "3 Flipped Centers", setupAlg: "R B' R' B" },
+  { name: "Case 1", alg: "(R B' R' B)", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 2", alg: "(R B' R' B) U' (R B' R' B) U Uv", group: "2 Triggers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 3", alg: "U' (B' R B R') U'", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 4a", alg: "U (R' L R L') U Uv", group: "1 Trigger", setupAlg: "Uv R B' R' B" },
+  { name: "Case 4b", alg: "U' (L R' L' R) U' Uv'", group: "1 Trigger", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 4c", alg: "U (L R' L' R) U (R' L R L') U' Uv", group: "2 Triggers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 5", alg: "(L R' L' R) U' (R' L R L') U Uv'", group: "2 Triggers", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 6a", alg: "U' (R' L R L') U Uv'", group: "1 Trigger", setupAlg: "Uv' R B' R' B" },
+  { name: "Case 6b", alg: "U (L R' L' R) U' Uv", group: "1 Trigger", setupAlg: "Uv R B' R' B" },
+  { name: "Case 7", alg: "(L R' L' R) U' (L R' L' R) U' (R' L R L') U Uv", group: "3 Triggers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 8", alg: "(R B' R' B) U (R B' R' B) U", group: "2 Triggers", setupAlg: "R B' R' B" },
 ];
 
 export default {
