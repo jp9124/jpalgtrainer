@@ -17,17 +17,15 @@
 // and Case 7 have no third algorithm in the source ("all angles are the
 // same"), so they're carried over unchanged from the Standard set.
 const cases = [
-  { name: "Case 1", alg: "(R B' R' B)", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 3", alg: "U (L R' L' R) U Uv", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 4a", alg: "U (B' R B R') U Uv'", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 4b", alg: "U' (R' L R L') U' Uv", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 6a", alg: "U' (B' R B R') U", group: "1 Trigger", setupAlg: "R B' R' B" },
+  { name: "Case 6b", alg: "U (R' L R L') U'", group: "1 Trigger", setupAlg: "R B' R' B" },
   { name: "Case 2", alg: "U' (R' L R L') U (R' L R L') U'", group: "2 Triggers", setupAlg: "R B' R' B" },
-  { name: "Case 3", alg: "Uv' U (L R' L' R) U Uv", group: "1 Trigger", setupAlg: "Uv R B' R' B" },
-  { name: "Case 4a", alg: "Uv' U (B' R B R') U Uv'", group: "1 Trigger", setupAlg: "Uv R B' R' B" },
-  { name: "Case 4b", alg: "Uv' U' (R' L R L') U' Uv", group: "1 Trigger", setupAlg: "Uv R B' R' B" },
-  { name: "Case 4c", alg: "Uv' U (R' L R L') U (L R' L' R) U' Uv'", group: "2 Triggers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 5", alg: "Uv' U' (R' L R L') U (R' L R L') U' Uv", group: "2 Triggers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 6a", alg: "Uv' U' (B' R B R') U", group: "1 Trigger", setupAlg: "Uv' R B' R' B" },
-  { name: "Case 6b", alg: "Uv' U (R' L R L') U'", group: "1 Trigger", setupAlg: "R B' R' B" },
-  { name: "Case 7", alg: "(L R' L' R) U' (L R' L' R) U' (R' L R L') U Uv", group: "3 Triggers", setupAlg: "Uv R B' R' B" },
-  { name: "Case 8", alg: "U' (R' L R L') U' (R' L R L') U' Uv", group: "2 Triggers", setupAlg: "Uv R B' R' B" },
+  { name: "Case 4c", alg: "U (R' L R L') U (L R' L' R) U' Uv'", group: "2 Triggers", setupAlg: "R B' R' B" },
+  { name: "Case 5", alg: "U' (R' L R L') U (R' L R L') U' Uv", group: "2 Triggers", setupAlg: "R B' R' B" },
+  { name: "Case 8", alg: "U' (R' L R L') U' (R' L R L') U' Uv", group: "2 Triggers", setupAlg: "R B' R' B" },
 ];
 
 export default {
