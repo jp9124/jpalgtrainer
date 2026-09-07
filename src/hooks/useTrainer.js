@@ -209,7 +209,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
   const [allSets, setAllSets] = useState(() =>
     puzzleConfig.builtinSets.length ? puzzleConfig.builtinSets : [emptyCustomSet()],
   );
-  const [activeSetId, setActiveSetId] = useState(() => allSets[0].id);
+  const [activeSetId, setActiveSetId] = useState(() => {
+    const remembered = initialStorage.activeSetId;
+    return remembered && allSets.some((s) => s.id === remembered) ? remembered : allSets[0].id;
+  });
   const activeSet = useMemo(
     () => allSets.find((s) => s.id === activeSetId) ?? allSets[0],
     [allSets, activeSetId],
@@ -326,10 +329,15 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     return new Set(remembered !== undefined ? remembered : []);
   }, [persistedChecked, activeSet]);
 
-  // Persist stats / checked-case selections / custom set draft.
+  // Persist stats / checked-case selections / custom set draft / active set.
   useEffect(() => {
-    saveStorage(puzzleConfig.id, { stats: persistedStats, checkedCases: persistedChecked, customSetText });
-  }, [puzzleConfig, persistedStats, persistedChecked, customSetText]);
+    saveStorage(puzzleConfig.id, {
+      stats: persistedStats,
+      checkedCases: persistedChecked,
+      customSetText,
+      activeSetId,
+    });
+  }, [puzzleConfig, persistedStats, persistedChecked, customSetText, activeSetId]);
 
   // Persist practice options globally (not per-puzzle) so they carry over
   // when switching puzzles instead of resetting with the rest of this
@@ -943,10 +951,17 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     applyCustomSetText(customSetText);
   }, [applyCustomSetText, customSetText]);
 
-  // Restore a saved custom set once the puzzle engine is ready.
+  // Restore a saved custom set once the puzzle engine is ready. The custom
+  // set doesn't exist in allSets until this runs, so if it was the active
+  // set when the page was last closed, activeSetId's own initializer above
+  // couldn't have restored it — switch to it here instead, now that it
+  // actually exists.
   useEffect(() => {
     if (kpuzzle && initialCustomSetTextRef.current) {
       applyCustomSetText(initialCustomSetTextRef.current, { silent: true });
+      if (initialStorage.activeSetId === CUSTOM_SET_ID) {
+        setActiveSetId(CUSTOM_SET_ID);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kpuzzle]);
