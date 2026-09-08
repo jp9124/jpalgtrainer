@@ -57,6 +57,68 @@ const PYRAMINX_SPINS = ["", "y", "y2"];
 
 const COLOR_NEUTRAL_PUZZLE_IDS = ["2x2x2", "3x3x3", "5x5x5", "pyraminx"];
 
+// FTO's CIF/EIF orientation toggle: CIF ("corner in front", the puzzle's
+// normal/default orientation) is a no-op. EIF ("edge in front") is CIF's
+// view rotated 60 degrees clockwise around the U/D axis (half of a Uv' turn),
+// which shifts which physical face sits behind each of the 6 equator move
+// labels one step around the ring — e.g. pressing the control labeled "F"
+// now turns the face CIF calls "L", because after the rotation that's the
+// face now sitting in the visual F slot. This map is deliberately its own
+// inverse-of-a-cycle (F->L, R->F, BR->R, B->BR, BL->B, L->BL) rather than
+// the more obvious "F becomes R" direction, since it's keyed by the label
+// the user presses, not by the physical face being renamed. Move-pad/
+// keyboard labels don't change between modes (EIF reuses the same 6
+// letters, just pointed at different physical faces), only which real
+// cubing.js move gets applied. U/D and every other FTO move (wide moves,
+// vertex rotations, the tip move) aren't part of this ring and are left
+// untouched in both modes.
+const FTO_EIF_FACE_MAP = { F: "L", R: "F", BR: "R", B: "BR", BL: "B", L: "BL" };
+const FTO_EIF_FACE_MAP_LOWER = Object.fromEntries(
+  Object.entries(FTO_EIF_FACE_MAP).map(([k, v]) => [k.toLowerCase(), v.toLowerCase()]),
+);
+
+function remapMoveForFtoEif(move) {
+  const match = /^([A-Za-z]+)(2|')?$/.exec(move);
+  if (!match) return move;
+  const [, base, suffix] = match;
+  const table = base === base.toUpperCase() ? FTO_EIF_FACE_MAP : FTO_EIF_FACE_MAP_LOWER;
+  const mapped = table[base];
+  return mapped ? mapped + (suffix ?? "") : move;
+}
+
+// The other direction of FTO_EIF_FACE_MAP: given a real move written in the
+// case data's fixed (CIF) notation, which EIF-mode label would a user need
+// to press to perform it? E.g. FTO_EIF_FACE_MAP says pressing "F" performs
+// engine move "L", so this says engine move "L" displays as "F". Used only
+// to relabel case algorithm text for display in EIF mode — the case data
+// itself, and everything that executes moves (player.alg, applyMove above),
+// always stays in the fixed CIF notation.
+const EIF_LABEL_FOR_FTO_MOVE = Object.fromEntries(
+  Object.entries(FTO_EIF_FACE_MAP).map(([label, move]) => [move, label]),
+);
+const EIF_LABEL_FOR_FTO_MOVE_LOWER = Object.fromEntries(
+  Object.entries(EIF_LABEL_FOR_FTO_MOVE).map(([k, v]) => [k.toLowerCase(), v.toLowerCase()]),
+);
+
+// Relabels only the 6 equator face-turn letters (single and wide, either
+// case, with their "'" kept) in an alg string for EIF display — rotations
+// (U/D, Uv/Uv', Fv/Fv', Lv/Lv', Rv/Rv', T/T') and everything else (spacing,
+// the "(...)"" visual grouping some case data uses) pass through untouched.
+export function toEifDisplayAlg(algString) {
+  if (!algString) return algString;
+  return algString
+    .split(/(\s+)/)
+    .map((token) => {
+      const match = /^(\(*)([A-Za-z]+)(2|')?(\)*)$/.exec(token);
+      if (!match) return token;
+      const [, open, base, suffix, close] = match;
+      const table = base === base.toUpperCase() ? EIF_LABEL_FOR_FTO_MOVE : EIF_LABEL_FOR_FTO_MOVE_LOWER;
+      const mapped = table[base];
+      return mapped ? `${open}${mapped}${suffix ?? ""}${close}` : token;
+    })
+    .join("");
+}
+
 function pick(options) {
   return options[Math.floor(Math.random() * options.length)];
 }
@@ -235,6 +297,10 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     for (const a of puzzleConfig.keyAliases ?? []) register(a);
     return map;
   }, [puzzleConfig]);
+
+  // FTO-only, toggled by "-"/"=" (see the keydown handler below) — not
+  // persisted, always starts back on CIF (the normal/default view).
+  const [cifEifMode, setCifEifMode] = useState("cif");
 
   const [learnCase, setLearnCase] = useState(null);
   const [currentCase, setCurrentCase] = useState(null);
@@ -675,26 +741,34 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       // reset) shouldn't restart the timer or disturb the "Solved!" status.
       if (currentCase && timerStatus === "idle") startTimer();
 
+      // FTO's EIF mode: the move-pad/keyboard label the user pressed stays
+      // "move" for everything below (case data, undo history, animation) —
+      // only the label-to-real-move translation happens here, once, so
+      // nothing downstream needs to know CIF/EIF exists (see
+      // remapMoveForFtoEif's source note).
+      const effectiveMove =
+        puzzleConfig.id === "fto" && cifEifMode === "eif" ? remapMoveForFtoEif(move) : move;
+
       // Square-1's x2/y2/z2 are a pure reorientation of the canvas, not a
       // real move — skip kpuzzle validation/mutation and the solved check
       // (which would just re-evaluate the same untouched pattern) but still
       // animate and record them like any other move (see
       // SQUARE1_VIEW_ROTATIONS's source note).
-      const isViewRotation = puzzleConfig.id === "square1" && SQUARE1_VIEW_ROTATIONS.has(move);
+      const isViewRotation = puzzleConfig.id === "square1" && SQUARE1_VIEW_ROTATIONS.has(effectiveMove);
 
       if (!isViewRotation) {
         try {
           // applyAlg (not applyMove) so compound tokens like Square-1's
           // "(3,0)" work the same way single face turns do.
-          scrambledPatternRef.current.applyAlg(move);
+          scrambledPatternRef.current.applyAlg(effectiveMove);
         } catch {
-          setStatusLine(`Invalid move: ${move}`);
+          setStatusLine(`Invalid move: ${effectiveMove}`);
           return;
         }
       }
 
-      solveMovesRef.current = [...solveMovesRef.current, move];
-      animateMoveOnPracticePlayer(move);
+      solveMovesRef.current = [...solveMovesRef.current, effectiveMove];
+      animateMoveOnPracticePlayer(effectiveMove);
 
       if (!isViewRotation && currentCase && timerStatus !== "solved" && isSolved(currentPattern())) {
         onSolved();
@@ -708,6 +782,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
       startTimer,
       animateMoveOnPracticePlayer,
       puzzleConfig,
+      cifEifMode,
       currentPattern,
       solvedPattern,
       onSolved,
@@ -1000,6 +1075,20 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
         goToNextCase();
         return;
       }
+      // FTO's CIF/EIF orientation toggle (see remapMoveForFtoEif's source
+      // note) — "-" always selects EIF, "=" always selects CIF; neither is a
+      // flip-a-single-toggle key, so there's no ambiguity about which mode a
+      // press lands on.
+      if (puzzleConfig.id === "fto" && e.code === "Minus") {
+        e.preventDefault();
+        setCifEifMode("eif");
+        return;
+      }
+      if (puzzleConfig.id === "fto" && e.code === "Equal") {
+        e.preventDefault();
+        setCifEifMode("cif");
+        return;
+      }
 
       const move = (e.shiftKey && keyToMove[`shift+${e.code}`]) || keyToMove[e.code];
       if (move) {
@@ -1009,7 +1098,16 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [keyToMove, applyMove, revealAlg, loadNewPracticeCase, resetCase, goToPreviousCase, goToNextCase]);
+  }, [
+    keyToMove,
+    applyMove,
+    revealAlg,
+    loadNewPracticeCase,
+    resetCase,
+    goToPreviousCase,
+    goToNextCase,
+    puzzleConfig,
+  ]);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
 
@@ -1041,6 +1139,7 @@ export function useTrainer({ puzzleConfig, kpuzzle, solvedPattern, practicePlaye
     resetCase,
     loadNewPracticeCase,
     revealAlg,
+    cifEifMode,
 
     timerLabel,
     timerStatus,

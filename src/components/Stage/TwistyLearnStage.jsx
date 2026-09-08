@@ -11,11 +11,16 @@ import styles from "./Stage.module.css";
 //
 // Square-1 renders through Square1Canvas instead — see TwistyPracticeStage.
 export default function TwistyLearnStage() {
-  const { learnPlayerRef, puzzleConfig } = useTrainerContext();
+  const { learnPlayerRef, puzzleConfig, cifEifMode } = useTrainerContext();
 
   if (puzzleConfig.id === "square1") {
     return <Square1Canvas ref={learnPlayerRef} className={styles.learnTwisty} />;
   }
+
+  // Kept in sync with TwistyPracticeStage's own EIF camera angle — see its
+  // comment.
+  const cameraLongitude =
+    puzzleConfig.id === "fto" ? (cifEifMode === "eif" ? -60 : 0) : puzzleConfig.cameraLongitude;
 
   return (
     <twisty-player
@@ -24,7 +29,7 @@ export default function TwistyLearnStage() {
       background="none"
       hint-facelets="none"
       control-panel="none"
-      camera-longitude={puzzleConfig.cameraLongitude}
+      camera-longitude={cameraLongitude}
       camera-latitude={puzzleConfig.cameraLatitude}
       camera-latitude-limit={puzzleConfig.cameraLatitudeLimit}
       class={styles.learnTwisty}
