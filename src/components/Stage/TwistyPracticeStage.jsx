@@ -11,11 +11,17 @@ import styles from "./Stage.module.css";
 // otherwise driven by the exact same code in useTrainer.js: that engine
 // exposes the same ref API (alg/jumpToEnd/etc.) a <twisty-player> does.
 export default function TwistyPracticeStage() {
-  const { practicePlayerRef, puzzleConfig } = useTrainerContext();
+  const { practicePlayerRef, puzzleConfig, cifEifMode } = useTrainerContext();
 
   if (puzzleConfig.id === "square1") {
     return <Square1Canvas ref={practicePlayerRef} className={styles.practiceTwisty} />;
   }
+
+  // FTO's EIF mode ("-" key) points the camera 60 degrees further round the
+  // U/D axis than CIF's default (0) — see remapMoveForFtoEif's source note
+  // in useTrainer.js for why that's the same amount its move labels shift.
+  const cameraLongitude =
+    puzzleConfig.id === "fto" ? (cifEifMode === "eif" ? -60 : 0) : puzzleConfig.cameraLongitude;
 
   return (
     <twisty-player
@@ -24,7 +30,7 @@ export default function TwistyPracticeStage() {
       background="none"
       hint-facelets="none"
       control-panel="none"
-      camera-longitude={puzzleConfig.cameraLongitude}
+      camera-longitude={cameraLongitude}
       camera-latitude={puzzleConfig.cameraLatitude}
       camera-latitude-limit={puzzleConfig.cameraLatitudeLimit}
       class={styles.practiceTwisty}

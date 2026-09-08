@@ -1,4 +1,5 @@
 import { useTrainerContext } from "../../context/TrainerContext.jsx";
+import { toEifDisplayAlg } from "../../hooks/useTrainer.js";
 import MovePad from "./MovePad.jsx";
 import Square1Pad from "./Square1Pad.jsx";
 import styles from "./Stage.module.css";
@@ -17,9 +18,12 @@ export default function PracticeArea() {
     undoMove,
     resetCase,
     puzzleConfig,
+    cifEifMode,
   } = useTrainerContext();
 
   const showAlg = revealed || timerStatus === "solved";
+  const shownAlg =
+    puzzleConfig.id === "fto" && cifEifMode === "eif" ? toEifDisplayAlg(displayAlg) : displayAlg;
 
   const timerClass = [
     styles.timer,
@@ -37,7 +41,7 @@ export default function PracticeArea() {
     <div className={styles.practiceArea}>
       <div className={timerClass}>{timerLabel}</div>
       <div className={statusClass}>{statusLine}</div>
-      <div className={algClass}>{currentCase ? displayAlg : "? ? ? ? ?"}</div>
+      <div className={algClass}>{currentCase ? shownAlg : "? ? ? ? ?"}</div>
       <div className={styles.controlsRow}>
         <button className={styles.primary} onClick={loadNewPracticeCase}>
           New case (enter)
